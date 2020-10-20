@@ -1,7 +1,10 @@
 package com.msh.WorkoutGameServer.model;
 
+import lombok.Getter;
+
 import java.awt.*;
 
+@Getter
 public class Field {
     private Color color;
     private int value;
