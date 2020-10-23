@@ -5,12 +5,8 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.awt.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -25,6 +21,8 @@ public class Game {
     private List<Player> players = new ArrayList<>();
     private Map<String, Integer> stockNumbers = new HashMap<>();
     private Map<String, Integer> exerciseValues = new HashMap<>();
+    private List<Color> freeColors = Arrays.asList(Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE,
+            Color.BLACK, Color.BROWN, Color.PURPLE, Color.WHITE, Color.YELLOW, Color.CYAN);
 
     private boolean subscriptionOn;
     private boolean started;
@@ -35,6 +33,7 @@ public class Game {
         this.title = title;
         this.mapSize = mapSize;
         this.creationDate = LocalDateTime.now();
+        this.subscriptionOn = true;
         //TODO: read exerciseValues from csv file
         //TODO: create map
         //TODO: randomize player positions, after starting the game
@@ -66,12 +65,13 @@ public class Game {
     }
 
     public void addPlayer(String playerName) {
-        //TODO: color
-        Player newPlayer = new Player(playerName, Color.GREEN);
+        Random rand = new Random();
+        Color color = freeColors.remove(rand.nextInt(10));
+        Player newPlayer = new Player(playerName, color);
         players.add(newPlayer);
     }
 
-    public boolean isNameInUse(String name) {
+    public boolean isPlayerExist(String name) {
         return players.stream().anyMatch(p -> p.getName().equals(name));
     }
 }

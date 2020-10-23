@@ -3,8 +3,9 @@ package com.msh.WorkoutGameServer.service;
 import com.msh.WorkoutGameServer.database.GameDataAccess;
 import com.msh.WorkoutGameServer.model.Coordinate;
 import com.msh.WorkoutGameServer.model.Game;
-import com.msh.WorkoutGameServer.model.message.in.GameMsg;
-import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMsg;
+import com.msh.WorkoutGameServer.model.JoinResponse;
+import com.msh.WorkoutGameServer.model.message.in.GameMessage;
+import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,7 @@ public class GameServiceImpl implements GameService {
         game.setStarted(true);
         game.setSubscriptionOn(false);
         this.gameDataAccess.save(game);
+        System.out.println(game);
     }
 
     @Override
@@ -50,15 +52,20 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public boolean joinGame(GameMsg msg) {
-        String playerName = msg.getSender();
+    public JoinResponse joinGame(GameMessage msg) {
+        String playerName = msg.getFrom();
         Game game = getGame();
-        if (game.isNameInUse(playerName) || !game.isSubscriptionOn()) {
-            return false;
+        if (game.isStarted() && game.isPlayerExist(playerName)) {
+            return JoinResponse.GAME;
+        } else if (game.isPlayerExist(playerName)) {
+            return JoinResponse.USED;
+        } else if (game.isSubscriptionOn()) {
+            game.addPlayer(playerName);
+            gameDataAccess.save(game);
+            return JoinResponse.SUB;
+        } else {
+            return JoinResponse.OFF;
         }
-        game.addPlayer(playerName);
-        gameDataAccess.save(game);
-        return true;
     }
 
     @Override
@@ -67,10 +74,10 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void modifyMap(GameMsg msg) {
-        String playerName = msg.getSender();
-        Coordinate from = ((PlayerMoveMsg) msg).getFrom();
-        Coordinate to = ((PlayerMoveMsg) msg).getTo();
+    public void modifyMap(GameMessage msg) {
+        String playerName = msg.getFrom();
+        Coordinate from = ((PlayerMoveMessage) msg).getPrevLocation();
+        Coordinate to = ((PlayerMoveMessage) msg).getNextLocation();
         Game game = getGame();
         game.setPlayerPosition(playerName, to);
         game.setPlayerPositionOnMap(playerName, from, to);

@@ -1,11 +1,17 @@
-package com.msh.WorkoutGameServer.model.message.in;
+package com.msh.WorkoutGameServer.model.message;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
-public class SimpleMessage {
+@Setter
+abstract public class SimpleMessage {
     String from;
     String text;
+
+    public SimpleMessage() {
+
+    }
 
     public SimpleMessage(String from, String text) {
         this.from = from;

@@ -1,6 +1,6 @@
 package com.msh.WorkoutGameServer.model.message;
 
-public enum MsgType {
+public enum MessageType {
     JOIN,
     MOVE,
     OCCUPY,

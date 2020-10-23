@@ -3,7 +3,6 @@ package com.msh.WorkoutGameServer.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.awt.*;
 import java.util.Objects;
 
 @Getter
