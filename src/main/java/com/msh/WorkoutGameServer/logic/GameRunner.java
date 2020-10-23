@@ -26,7 +26,7 @@ public class GameRunner implements CommandLineRunner {
 
         Game game = new Game(title, size);
         gameService.createGame(game);
-        String command = "";
+        /*String command = "";
         while (!"terminate".equals(command)) {
             command = scanner.nextLine();
             switch (command) {
@@ -43,6 +43,6 @@ public class GameRunner implements CommandLineRunner {
                     System.out.println("Illegal command.");
                     break;
             }
-        }
+        }*/
     }
 }
