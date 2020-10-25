@@ -6,13 +6,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SimpleResponse<T> extends SimpleMessage {
-    private T response;
+public class SimpleResponse extends SimpleMessage {
+    private String response;
 
     public SimpleResponse() {
     }
 
-    public SimpleResponse(String from, String text, T response) {
+    public SimpleResponse(String from, String text, String response) {
         super(from, text);
         this.response = response;
     }

@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -34,9 +33,13 @@ public class Game {
         this.mapSize = mapSize;
         this.creationDate = LocalDateTime.now();
         this.subscriptionOn = true;
+        this.map = new Field[mapSize][mapSize];
+        for (int i = 0; i < mapSize; i++) {
+            for (int j = 0; j < mapSize; j++) {
+                map[i][j] = new Field();
+            }
+        }
         //TODO: read exerciseValues from csv file
-        //TODO: create map
-        //TODO: randomize player positions, after starting the game
     }
 
     @Override
@@ -50,6 +53,18 @@ public class Game {
                 '}';
     }
 
+    public void randomizePlayerPositions() {
+        Random random = new Random();
+        int x;
+        int y;
+        for (var player : players) {
+            x = random.nextInt(mapSize);
+            y = random.nextInt(mapSize);
+            player.setPosition(new Coordinate(x, y));
+            map[x][y].addPlayerToField(player);
+        }
+    }
+
     public void setPlayerPosition(String playerName, Coordinate position) {
         players.stream()
                 .filter(p -> p.getName().equals(playerName))
@@ -57,21 +72,27 @@ public class Game {
     }
 
     public void setPlayerPositionOnMap(String playerName, Coordinate from, Coordinate to) {
-        List<String> fromFieldPlayers = map[from.getX()][from.getY()].getPlayersOnField();
-        List<String> newPlayerList = fromFieldPlayers.stream().filter(p -> !p.equals(playerName)).collect(Collectors.toList());
-        map[from.getX()][from.getY()].setPlayersOnField(newPlayerList);
-
-        map[to.getX()][to.getY()].getPlayersOnField().add(playerName);
+        List<Player> fromFieldPlayers = map[from.getX()][from.getY()].getPlayersOnField();
+        Player player = fromFieldPlayers.stream().filter(p -> p.getName().equals(playerName)).findFirst().orElse(null);
+        if (player != null) {
+            fromFieldPlayers.remove(player);
+            map[from.getX()][from.getY()].setPlayersOnField(fromFieldPlayers);
+            map[to.getX()][to.getY()].getPlayersOnField().add(player);
+        }
     }
 
     public void addPlayer(String playerName) {
         Random rand = new Random();
-        Color color = freeColors.remove(rand.nextInt(10));
+        Color color = freeColors.remove(rand.nextInt(freeColors.size()));
         Player newPlayer = new Player(playerName, color);
         players.add(newPlayer);
     }
 
     public boolean isPlayerExist(String name) {
         return players.stream().anyMatch(p -> p.getName().equals(name));
+    }
+
+    public Player getPlayerByName(String name) {
+        return players.stream().filter(p -> p.getName().equals(name)).findFirst().orElse(null);
     }
 }

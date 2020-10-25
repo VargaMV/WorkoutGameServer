@@ -1,7 +1,10 @@
 package com.msh.WorkoutGameServer.controller;
 
-import com.msh.WorkoutGameServer.model.JoinResponse;
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
+import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
+import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
+import com.msh.WorkoutGameServer.model.message.out.MapStateResponse;
+import com.msh.WorkoutGameServer.model.message.out.PlayerStateResponse;
 import com.msh.WorkoutGameServer.model.message.out.SimpleResponse;
 import com.msh.WorkoutGameServer.service.GameServiceImpl;
 import org.apache.logging.log4j.LogManager;
@@ -25,36 +28,46 @@ public class MessageController {
 
     @MessageMapping("/action")
     public void handlePlayerAction(@Payload GameMessage msg) {
-        logger.info("Somebody connected: " + msg.getFrom());
         switch (msg.getType()) {
             case JOIN:
-                logger.info(msg.getFrom() + " wants to join.");
+                logger.info("New connection: " + msg.getFrom());
                 JoinResponse response = gameService.joinGame(msg);
                 switch (response) {
                     case SUB:
                         logger.info(msg.getFrom() + " successfully subscribed to the game.");
-                        this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse<>("Server", msg.getFrom() + " subscribed to the game.", response.toString()));
+                        this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse("Server", msg.getFrom() + " subscribed to the game.", response.toString()));
                         break;
                     case USED:
                         logger.info(msg.getFrom() + " was unable to subscribe, because the name was already in use");
-                        this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom(), new SimpleResponse<>("Server", "This name is already in use.", response.toString()));
+                        this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom(), new SimpleResponse("Server", "This name is already in use.", response.toString()));
                         break;
                     case GAME:
                         logger.info(msg.getFrom() + " joined to the game.");
-                        this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse<>("Server", msg.getFrom() + " joined the game.", response.toString()));
+                        this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse("Server", msg.getFrom() + " joined the game.", response.toString()));
+                        this.simpleMessagingTemplate.convertAndSend("/private/player/" + msg.getFrom(), new PlayerStateResponse("Server", "Player update!", "PLAYER", gameService.getPlayer(msg.getFrom())));
+                        this.simpleMessagingTemplate.convertAndSend("/private/map/" + msg.getFrom(), new MapStateResponse("Server", "Map update!", "MAP", gameService.getMap()));
+
                         break;
                     case OFF:
                         logger.info(msg.getFrom() + "  was unable to subscribe, because the subscription time expired.");
-                        this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse<>("Server", msg.getFrom() + " You are late to subscribe to this game.", response.toString()));
+                        this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse("Server", msg.getFrom() + " You are late to subscribe to this game.", response.toString()));
                         break;
                 }
+                break;
 
             /*case MOVE:
+                System.out.println(((PlayerMoveMessage)msg).getNewPos());
                 gameService.modifyMap(msg);
-                this.simpleMessagingTemplate.convertAndSend("/public", gameService.getGame().getMap());
-
-             */
+                this.simpleMessagingTemplate.convertAndSend("/public", new MapStateResponse("Server", "Map update!", "MAP", gameService.getMap()));
+                break;*/
         }
+
     }
 
+    @MessageMapping("/action/move")
+    public void handlePlayerMove(@Payload PlayerMoveMessage msg) {
+        System.out.println(msg.getNewPos());
+        gameService.modifyMap(msg);
+        this.simpleMessagingTemplate.convertAndSend("/public/map", new MapStateResponse(msg.getFrom(), "Map move update!", "MAP", gameService.getMap()));
+    }
 }

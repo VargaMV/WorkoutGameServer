@@ -2,10 +2,12 @@ package com.msh.WorkoutGameServer.service;
 
 import com.msh.WorkoutGameServer.database.GameDataAccess;
 import com.msh.WorkoutGameServer.model.Coordinate;
+import com.msh.WorkoutGameServer.model.Field;
 import com.msh.WorkoutGameServer.model.Game;
-import com.msh.WorkoutGameServer.model.JoinResponse;
+import com.msh.WorkoutGameServer.model.Player;
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
+import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +44,7 @@ public class GameServiceImpl implements GameService {
         Game game = getGame();
         game.setStarted(true);
         game.setSubscriptionOn(false);
+        game.randomizePlayerPositions();
         this.gameDataAccess.save(game);
         System.out.println(game);
     }
@@ -74,10 +77,22 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public Player getPlayer(String name) {
+        Game game = getGame();
+        return game.getPlayerByName(name);
+    }
+
+    @Override
+    public Field[][] getMap() {
+        Game game = getGame();
+        return game.getMap();
+    }
+
+    @Override
     public void modifyMap(GameMessage msg) {
         String playerName = msg.getFrom();
-        Coordinate from = ((PlayerMoveMessage) msg).getPrevLocation();
-        Coordinate to = ((PlayerMoveMessage) msg).getNextLocation();
+        Coordinate from = ((PlayerMoveMessage) msg).getPrevPos();
+        Coordinate to = ((PlayerMoveMessage) msg).getNewPos();
         Game game = getGame();
         game.setPlayerPosition(playerName, to);
         game.setPlayerPositionOnMap(playerName, from, to);

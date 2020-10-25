@@ -3,9 +3,11 @@ package com.msh.WorkoutGameServer.model.message;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
-abstract public class SimpleMessage {
+abstract public class SimpleMessage implements Serializable {
     String from;
     String text;
 

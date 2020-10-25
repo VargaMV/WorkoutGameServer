@@ -9,12 +9,21 @@ import lombok.Setter;
 @Setter
 public class PlayerMoveMessage extends GameMessage {
 
-    Coordinate prevLocation;
-    Coordinate nextLocation;
+    Coordinate prevPos;
+    Coordinate newPos;
 
-    PlayerMoveMessage(String sender, String text, Coordinate prevLocation, Coordinate nextLocation) {
-        super(MessageType.MOVE, sender, text);
-        this.prevLocation = prevLocation;
-        this.nextLocation = nextLocation;
+    public PlayerMoveMessage() {
+    }
+
+    public PlayerMoveMessage(String from, String text, Coordinate prevPos, Coordinate newPos) {
+        super(MessageType.MOVE, from, text);
+        this.prevPos = prevPos;
+        this.newPos = newPos;
+    }
+
+    public PlayerMoveMessage(MessageType type, String from, String text, Coordinate prevPos, Coordinate newPos) {
+        super(type, from, text);
+        this.prevPos = prevPos;
+        this.newPos = newPos;
     }
 }

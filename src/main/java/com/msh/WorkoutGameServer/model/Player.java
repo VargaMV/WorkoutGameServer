@@ -3,11 +3,12 @@ package com.msh.WorkoutGameServer.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @Getter
 @Setter
-public class Player implements Comparable<Player> {
+public class Player implements Comparable<Player>, Serializable {
     String name;
     Color color;
     Coordinate position;
@@ -19,7 +20,7 @@ public class Player implements Comparable<Player> {
     public Player(String name, Color color) {
         this.name = name;
         this.color = color;
-        //this.position = new Coordinate(0,0);
+        this.position = new Coordinate(0, 0);
         this.money = Constants.STARTING_MONEY;
         this.currentScore = 0;
         this.totalScore = 0;
@@ -42,5 +43,10 @@ public class Player implements Comparable<Player> {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    @Override
+    public String toString() {
+        return name + " -> " + color + " -> pos:" + position;
     }
 }
