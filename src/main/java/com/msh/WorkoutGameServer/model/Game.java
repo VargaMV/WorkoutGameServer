@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -21,7 +22,7 @@ public class Game {
     private Map<String, Integer> stockNumbers = new HashMap<>();
     private Map<String, Integer> exerciseValues = new HashMap<>();
     private List<Color> freeColors = Arrays.asList(Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE,
-            Color.BLACK, Color.BROWN, Color.PURPLE, Color.WHITE, Color.YELLOW, Color.CYAN);
+            Color.BLACK, Color.BROWN, Color.PURPLE, Color.YELLOW, Color.CYAN);
 
     private boolean subscriptionOn;
     private boolean started;
@@ -39,7 +40,20 @@ public class Game {
                 map[i][j] = new Field();
             }
         }
-        //TODO: read exerciseValues from csv file
+
+        File data = new File("data.csv");
+        try (Scanner scanner = new Scanner(data)) {
+            while (scanner.hasNextLine()) {
+                String dataLine = scanner.nextLine();
+                String[] parts = dataLine.split(",");
+                String name = parts[0].trim();
+                int value = Integer.parseInt(parts[1]);
+                exerciseValues.put(name, value);
+                stockNumbers.put(name, 0);
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override
@@ -72,13 +86,17 @@ public class Game {
     }
 
     public void setPlayerPositionOnMap(String playerName, Coordinate from, Coordinate to) {
-        List<Player> fromFieldPlayers = map[from.getX()][from.getY()].getPlayersOnField();
-        Player player = fromFieldPlayers.stream().filter(p -> p.getName().equals(playerName)).findFirst().orElse(null);
+        List<SimplePlayer> fromFieldPlayers = map[from.getX()][from.getY()].getPlayersOnField();
+        SimplePlayer player = fromFieldPlayers.stream().filter(p -> p.getName().equals(playerName)).findFirst().orElse(null);
         if (player != null) {
             fromFieldPlayers.remove(player);
             map[from.getX()][from.getY()].setPlayersOnField(fromFieldPlayers);
             map[to.getX()][to.getY()].getPlayersOnField().add(player);
         }
+    }
+
+    public void setFieldOwner(Coordinate field, Player newOwner) {
+        map[field.getX()][field.getY()].setOwner(new SimplePlayer(newOwner));
     }
 
     public void addPlayer(String playerName) {
@@ -94,5 +112,13 @@ public class Game {
 
     public Player getPlayerByName(String name) {
         return players.stream().filter(p -> p.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    public void occupy(Coordinate target, Player newOwner) {
+        setFieldOwner(target, newOwner);
+        int playerIndex = players.indexOf(newOwner);
+        int value = players.get(playerIndex).getCurrentScore();
+        map[target.getX()][target.getY()].setValue(value);
+        players.get(playerIndex).setCurrentScore(0);
     }
 }

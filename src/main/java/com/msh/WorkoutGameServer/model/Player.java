@@ -3,8 +3,12 @@ package com.msh.WorkoutGameServer.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.File;
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Scanner;
 
 @Getter
 @Setter
@@ -16,6 +20,8 @@ public class Player implements Comparable<Player>, Serializable {
     int currentScore;
     int totalScore;
     int rangeOfVision;
+    Map<String, Integer> exerciseNumbers = new LinkedHashMap<>();
+    Map<String, Integer> stockNumbers = new LinkedHashMap<>();
 
     public Player(String name, Color color) {
         this.name = name;
@@ -25,6 +31,18 @@ public class Player implements Comparable<Player>, Serializable {
         this.currentScore = 0;
         this.totalScore = 0;
         this.rangeOfVision = 1;
+
+        File data = new File("data.csv");
+        try (Scanner scanner = new Scanner(data)) {
+            while (scanner.hasNextLine()) {
+                String dataLine = scanner.nextLine();
+                String exercise = dataLine.split(",")[0].trim();
+                exerciseNumbers.put(exercise, 0);
+                stockNumbers.put(exercise, 0);
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override

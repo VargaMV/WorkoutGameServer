@@ -5,8 +5,10 @@ import com.msh.WorkoutGameServer.model.Coordinate;
 import com.msh.WorkoutGameServer.model.Field;
 import com.msh.WorkoutGameServer.model.Game;
 import com.msh.WorkoutGameServer.model.Player;
+import com.msh.WorkoutGameServer.model.message.MessageType;
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
+import com.msh.WorkoutGameServer.model.message.in.PlayerOccupationMessage;
 import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,7 +39,6 @@ public class GameServiceImpl implements GameService {
         this.gameDataAccess.save(game);
         System.out.println(game);
     }
-
 
     @Override
     public void start() {
@@ -91,11 +92,19 @@ public class GameServiceImpl implements GameService {
     @Override
     public void modifyMap(GameMessage msg) {
         String playerName = msg.getFrom();
-        Coordinate from = ((PlayerMoveMessage) msg).getPrevPos();
-        Coordinate to = ((PlayerMoveMessage) msg).getNewPos();
         Game game = getGame();
-        game.setPlayerPosition(playerName, to);
-        game.setPlayerPositionOnMap(playerName, from, to);
+        if (msg.getType() == MessageType.MOVE) {
+            Coordinate from = ((PlayerMoveMessage) msg).getPrevPos();
+            Coordinate to = ((PlayerMoveMessage) msg).getNewPos();
+
+            game.setPlayerPosition(playerName, to);
+            game.setPlayerPositionOnMap(playerName, from, to);
+        } else if (msg.getType() == MessageType.OCCUPY) {
+            Coordinate target = ((PlayerOccupationMessage) msg).getOccupiedField();
+            Player newOwner = game.getPlayerByName(playerName);
+            game.occupy(target, newOwner);
+        }
+
         this.gameDataAccess.save(game);
     }
 }

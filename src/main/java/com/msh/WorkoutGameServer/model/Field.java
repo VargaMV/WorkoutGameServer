@@ -9,23 +9,22 @@ import java.util.List;
 @Getter
 @Setter
 public class Field {
-    private Color color;
+    private SimplePlayer owner;
     private int value;
-    private List<Player> playersOnField;
+    private List<SimplePlayer> playersOnField;
 
     public Field(){
-        color = Color.WHITE;
+        owner = new SimplePlayer("Mr.Nobody", Color.WHITE);
         value = 0;
         playersOnField = new ArrayList<>();
     }
 
-    public void addPlayerToField(Player player) {
-        playersOnField.add(player);
+    public Color getColor() {
+        return owner.getColor();
     }
 
-    public Player removePlayerFromField(Player player) {
-        int ind = playersOnField.indexOf(player);
-        return playersOnField.remove(ind);
+    public void addPlayerToField(Player player) {
+        playersOnField.add(new SimplePlayer(player));
     }
 
     @Override

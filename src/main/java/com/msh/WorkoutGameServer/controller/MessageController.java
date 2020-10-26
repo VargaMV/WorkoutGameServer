@@ -2,6 +2,7 @@ package com.msh.WorkoutGameServer.controller;
 
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
+import com.msh.WorkoutGameServer.model.message.in.PlayerOccupationMessage;
 import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
 import com.msh.WorkoutGameServer.model.message.out.MapStateResponse;
 import com.msh.WorkoutGameServer.model.message.out.PlayerStateResponse;
@@ -66,8 +67,15 @@ public class MessageController {
 
     @MessageMapping("/action/move")
     public void handlePlayerMove(@Payload PlayerMoveMessage msg) {
-        System.out.println(msg.getNewPos());
+        logger.info(msg.getFrom() + " moved to " + msg.getNewPos());
         gameService.modifyMap(msg);
         this.simpleMessagingTemplate.convertAndSend("/public/map", new MapStateResponse(msg.getFrom(), "Map move update!", "MAP", gameService.getMap()));
+    }
+
+    @MessageMapping("/action/occupy")
+    public void handlePlayerOccupation(@Payload PlayerOccupationMessage msg) {
+        logger.info(msg.getFrom() + " occupied " + msg.getOccupiedField());
+        gameService.modifyMap(msg);
+        this.simpleMessagingTemplate.convertAndSend("/public/map", new MapStateResponse(msg.getFrom(), "Map occupy update!", "MAP", gameService.getMap()));
     }
 }

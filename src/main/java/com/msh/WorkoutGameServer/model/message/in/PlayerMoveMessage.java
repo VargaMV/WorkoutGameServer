@@ -20,10 +20,4 @@ public class PlayerMoveMessage extends GameMessage {
         this.prevPos = prevPos;
         this.newPos = newPos;
     }
-
-    public PlayerMoveMessage(MessageType type, String from, String text, Coordinate prevPos, Coordinate newPos) {
-        super(type, from, text);
-        this.prevPos = prevPos;
-        this.newPos = newPos;
-    }
 }
