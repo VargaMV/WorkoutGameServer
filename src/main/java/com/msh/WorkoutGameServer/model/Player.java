@@ -45,6 +45,14 @@ public class Player implements Comparable<Player>, Serializable {
         }
     }
 
+    public void incMoney(int earning) {
+        money += earning;
+    }
+
+    public void decMoney(int cost) {
+        money -= cost;
+    }
+
     @Override
     public int compareTo(Player o) {
         return this.name.compareTo(o.name);

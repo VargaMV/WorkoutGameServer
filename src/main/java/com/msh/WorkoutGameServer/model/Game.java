@@ -1,5 +1,6 @@
 package com.msh.WorkoutGameServer.model;
 
+import com.msh.WorkoutGameServer.logic.PriceCalculator;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -19,8 +20,8 @@ public class Game {
     private int mapSize;
     private Field[][] map;
     private List<Player> players = new ArrayList<>();
-    private Map<String, Integer> stockNumbers = new HashMap<>();
-    private Map<String, Integer> exerciseValues = new HashMap<>();
+    private Map<String, Integer> totalStockNumbers = new LinkedHashMap<>();
+    private Map<String, Integer> exerciseValues = new LinkedHashMap<>();
     private List<Color> freeColors = Arrays.asList(Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE,
             Color.BLACK, Color.BROWN, Color.PURPLE, Color.YELLOW, Color.CYAN);
 
@@ -49,7 +50,7 @@ public class Game {
                 String name = parts[0].trim();
                 int value = Integer.parseInt(parts[1]);
                 exerciseValues.put(name, value);
-                stockNumbers.put(name, 0);
+                totalStockNumbers.put(name, 0);
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -120,5 +121,17 @@ public class Game {
         int value = players.get(playerIndex).getCurrentScore();
         map[target.getX()][target.getY()].setValue(value);
         players.get(playerIndex).setCurrentScore(0);
+    }
+
+    public void stockBought(String playerName, String exercise) {
+        int prevValue = totalStockNumbers.get(exercise);
+        totalStockNumbers.put(exercise, prevValue + 1);
+
+        Player player = getPlayerByName(playerName);
+        int playerPrevValue = player.getStockNumbers().get(exercise);
+        player.getStockNumbers().put(exercise, playerPrevValue + 1);
+
+        int price = PriceCalculator.calculate(totalStockNumbers.get(exercise));
+        player.decMoney(price);
     }
 }

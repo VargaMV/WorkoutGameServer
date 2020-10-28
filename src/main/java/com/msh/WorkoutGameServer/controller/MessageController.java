@@ -3,10 +3,7 @@ package com.msh.WorkoutGameServer.controller;
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerOccupationMessage;
-import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
-import com.msh.WorkoutGameServer.model.message.out.MapStateResponse;
-import com.msh.WorkoutGameServer.model.message.out.PlayerStateResponse;
-import com.msh.WorkoutGameServer.model.message.out.SimpleResponse;
+import com.msh.WorkoutGameServer.model.message.out.*;
 import com.msh.WorkoutGameServer.service.GameServiceImpl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,10 +17,10 @@ import org.springframework.stereotype.Controller;
 public class MessageController {
 
     @Autowired
-    GameServiceImpl gameService;
+    private GameServiceImpl gameService;
 
     @Autowired
-    SimpMessageSendingOperations simpleMessagingTemplate;
+    private SimpMessageSendingOperations simpleMessagingTemplate;
 
     private final Logger logger = LogManager.getLogger(MessageController.class);
 
@@ -47,6 +44,7 @@ public class MessageController {
                         this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse("Server", msg.getFrom() + " joined the game.", response.toString()));
                         this.simpleMessagingTemplate.convertAndSend("/private/player/" + msg.getFrom(), new PlayerStateResponse("Server", "Player update!", "PLAYER", gameService.getPlayer(msg.getFrom())));
                         this.simpleMessagingTemplate.convertAndSend("/private/map/" + msg.getFrom(), new MapStateResponse("Server", "Map update!", "MAP", gameService.getMap()));
+                        this.simpleMessagingTemplate.convertAndSend("/public/stock", new StocksStateResponse(msg.getFrom(), "Stocks update!", "STOCK", gameService.getStocks()));
 
                         break;
                     case OFF:
@@ -55,12 +53,6 @@ public class MessageController {
                         break;
                 }
                 break;
-
-            /*case MOVE:
-                System.out.println(((PlayerMoveMessage)msg).getNewPos());
-                gameService.modifyMap(msg);
-                this.simpleMessagingTemplate.convertAndSend("/public", new MapStateResponse("Server", "Map update!", "MAP", gameService.getMap()));
-                break;*/
         }
 
     }
@@ -77,5 +69,12 @@ public class MessageController {
         logger.info(msg.getFrom() + " occupied " + msg.getOccupiedField());
         gameService.modifyMap(msg);
         this.simpleMessagingTemplate.convertAndSend("/public/map", new MapStateResponse(msg.getFrom(), "Map occupy update!", "MAP", gameService.getMap()));
+    }
+
+    @MessageMapping("/action/stock")
+    public void handlePlayerBuying(@Payload GameMessage msg) {
+        logger.info(msg.getFrom() + " bought a(n) " + msg.getText() + " stock.");
+        gameService.modifyStocks(msg);
+        this.simpleMessagingTemplate.convertAndSend("/public/stock", new StocksStateResponse(msg.getFrom(), "Stocks update!", "STOCK", gameService.getStocks()));
     }
 }

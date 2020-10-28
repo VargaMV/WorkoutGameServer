@@ -6,12 +6,15 @@ import com.msh.WorkoutGameServer.model.Field;
 import com.msh.WorkoutGameServer.model.Game;
 import com.msh.WorkoutGameServer.model.Player;
 import com.msh.WorkoutGameServer.model.message.MessageType;
+import com.msh.WorkoutGameServer.model.message.SimpleMessage;
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerOccupationMessage;
 import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -90,6 +93,12 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public Map<String, Integer> getStocks() {
+        Game game = getGame();
+        return game.getTotalStockNumbers();
+    }
+
+    @Override
     public void modifyMap(GameMessage msg) {
         String playerName = msg.getFrom();
         Game game = getGame();
@@ -105,6 +114,15 @@ public class GameServiceImpl implements GameService {
             game.occupy(target, newOwner);
         }
 
+        this.gameDataAccess.save(game);
+    }
+
+    @Override
+    public void modifyStocks(SimpleMessage msg) {
+        String playerName = msg.getFrom();
+        Game game = getGame();
+        String exercise = msg.getText();
+        game.stockBought(playerName, exercise);
         this.gameDataAccess.save(game);
     }
 }
