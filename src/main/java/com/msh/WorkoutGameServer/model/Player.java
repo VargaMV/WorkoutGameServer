@@ -1,5 +1,6 @@
 package com.msh.WorkoutGameServer.model;
 
+import com.msh.WorkoutGameServer.logic.PriceCalculator;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,15 +14,17 @@ import java.util.Scanner;
 @Getter
 @Setter
 public class Player implements Comparable<Player>, Serializable {
-    String name;
-    Color color;
-    Coordinate position;
-    int money;
-    int currentScore;
-    int totalScore;
-    int rangeOfVision;
-    Map<String, Integer> exerciseNumbers = new LinkedHashMap<>();
-    Map<String, Integer> stockNumbers = new LinkedHashMap<>();
+    private String name;
+    private Color color;
+    private Coordinate position;
+    private int money;
+    private int currentScore;
+    private int totalScore;
+    private boolean sqrRange;
+    private int rangeOfVision;
+    private int visionIncPrice;
+    private Map<String, Integer> exerciseNumbers = new LinkedHashMap<>();
+    private Map<String, Integer> stockNumbers = new LinkedHashMap<>();
 
     public Player(String name, Color color) {
         this.name = name;
@@ -30,6 +33,7 @@ public class Player implements Comparable<Player>, Serializable {
         this.money = Constants.STARTING_MONEY;
         this.currentScore = 0;
         this.totalScore = 0;
+        this.sqrRange = false;
         this.rangeOfVision = 1;
 
         File data = new File("data.csv");
@@ -51,6 +55,44 @@ public class Player implements Comparable<Player>, Serializable {
 
     public void decMoney(int cost) {
         money -= cost;
+    }
+
+    public void incScore(int score) {
+        currentScore += score;
+    }
+
+    public void decScore(int score) {
+        currentScore -= score;
+    }
+
+    public boolean isStockAffordable(String exercise) {
+        return money >= PriceCalculator.calculateNext(stockNumbers.get(exercise));
+    }
+
+    public boolean isVisionIncAffordable() {
+        return money >= visionIncPrice;
+    }
+
+    public void incRangeOfVision() {
+        if (!isVisionMax() && isVisionIncAffordable()) {
+            if (sqrRange) {
+                rangeOfVision++;
+                sqrRange = false;
+            } else {
+                sqrRange = true;
+            }
+            money -= visionIncPrice;
+        }
+    }
+
+    public boolean isVisionMax() {
+        return (sqrRange && rangeOfVision == 2);
+    }
+
+
+    public void incExerciseValue(String exercise, int newValue) {
+        int prevValue = exerciseNumbers.get(exercise);
+        exerciseNumbers.put(exercise, prevValue + newValue);
     }
 
     @Override

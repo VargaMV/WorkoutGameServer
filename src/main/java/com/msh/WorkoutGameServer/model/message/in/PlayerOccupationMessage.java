@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class PlayerOccupationMessage extends GameMessage {
 
-    Coordinate occupiedField;
+    private Coordinate occupiedField;
 
     public PlayerOccupationMessage() {
     }

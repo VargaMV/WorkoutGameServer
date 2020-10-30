@@ -9,8 +9,8 @@ import lombok.Setter;
 @Setter
 public class PlayerMoveMessage extends GameMessage {
 
-    Coordinate prevPos;
-    Coordinate newPos;
+    private Coordinate prevPos;
+    private Coordinate newPos;
 
     public PlayerMoveMessage() {
     }

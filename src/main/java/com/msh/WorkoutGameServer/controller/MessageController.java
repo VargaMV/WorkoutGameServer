@@ -1,6 +1,7 @@
 package com.msh.WorkoutGameServer.controller;
 
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
+import com.msh.WorkoutGameServer.model.message.in.PlayerExerciseMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerOccupationMessage;
 import com.msh.WorkoutGameServer.model.message.out.*;
@@ -37,7 +38,7 @@ public class MessageController {
                         break;
                     case USED:
                         logger.info(msg.getFrom() + " was unable to subscribe, because the name was already in use");
-                        this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom(), new SimpleResponse("Server", "This name is already in use.", response.toString()));
+                        this.simpleMessagingTemplate.convertAndSend("/private/player/" + msg.getFrom(), new SimpleResponse("Server", "This name is already in use.", response.toString()));
                         break;
                     case GAME:
                         logger.info(msg.getFrom() + " joined to the game.");
@@ -76,5 +77,17 @@ public class MessageController {
         logger.info(msg.getFrom() + " bought a(n) " + msg.getText() + " stock.");
         gameService.modifyStocks(msg);
         this.simpleMessagingTemplate.convertAndSend("/public/stock", new StocksStateResponse(msg.getFrom(), "Stocks update!", "STOCK", gameService.getStocks()));
+    }
+
+    @MessageMapping("/action/exercise")
+    public void handlePlayerWorkingOut(@Payload PlayerExerciseMessage msg) {
+        logger.info(msg.getFrom() + " doin' some workout. ");
+        gameService.saveExerciseReps(msg);
+    }
+
+    @MessageMapping("/action/vision")
+    public void handlePlayerVisionInc(@Payload GameMessage msg) {
+        logger.info(msg.getFrom() + " has better vision now. ");
+        gameService.saveVisionInc(msg);
     }
 }

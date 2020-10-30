@@ -6,8 +6,8 @@ import com.msh.WorkoutGameServer.model.Field;
 import com.msh.WorkoutGameServer.model.Game;
 import com.msh.WorkoutGameServer.model.Player;
 import com.msh.WorkoutGameServer.model.message.MessageType;
-import com.msh.WorkoutGameServer.model.message.SimpleMessage;
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
+import com.msh.WorkoutGameServer.model.message.in.PlayerExerciseMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
 import com.msh.WorkoutGameServer.model.message.in.PlayerOccupationMessage;
 import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
@@ -49,6 +49,7 @@ public class GameServiceImpl implements GameService {
         game.setStarted(true);
         game.setSubscriptionOn(false);
         game.randomizePlayerPositions();
+        game.setVisionIncPriceForPlayers();
         this.gameDataAccess.save(game);
         System.out.println(game);
     }
@@ -66,7 +67,7 @@ public class GameServiceImpl implements GameService {
             return JoinResponse.GAME;
         } else if (game.isPlayerExist(playerName)) {
             return JoinResponse.USED;
-        } else if (game.isSubscriptionOn()) {
+        } else if (game.isSubscriptionOn() && game.getFreeColors().size() > 0) {
             game.addPlayer(playerName);
             gameDataAccess.save(game);
             return JoinResponse.SUB;
@@ -118,11 +119,29 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void modifyStocks(SimpleMessage msg) {
+    public void modifyStocks(GameMessage msg) {
         String playerName = msg.getFrom();
         Game game = getGame();
         String exercise = msg.getText();
         game.stockBought(playerName, exercise);
+        this.gameDataAccess.save(game);
+    }
+
+    @Override
+    public void saveExerciseReps(GameMessage msg) {
+        String playerName = msg.getFrom();
+        Game game = getGame();
+        String exercise = ((PlayerExerciseMessage) msg).getExercise();
+        int amount = ((PlayerExerciseMessage) msg).getAmount();
+        game.exerciseDone(playerName, exercise, amount);
+        this.gameDataAccess.save(game);
+    }
+
+    @Override
+    public void saveVisionInc(GameMessage msg) {
+        String playerName = msg.getFrom();
+        Game game = getGame();
+        game.incVision(playerName);
         this.gameDataAccess.save(game);
     }
 }

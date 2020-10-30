@@ -18,14 +18,21 @@ public class GameRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Title:");
-        String title = scanner.nextLine();
-        System.out.println("Map size:");
-        int size = scanner.nextInt();
-        scanner.nextLine();
+        System.out.println("New game? (y/n)");
+        String response = scanner.nextLine();
+        while (!response.equals("y") && !response.equals("n")) {
+            response = scanner.nextLine();
+        }
+        if (response.equals("y")) {
+            System.out.println("Title:");
+            String title = scanner.nextLine();
+            System.out.println("Map size (3-12):");
+            int size = scanner.nextInt();
+            scanner.nextLine();
 
-        Game game = new Game(title, size);
-        gameService.createGame(game);
+            Game game = new Game(title, size);
+            gameService.createGame(game);
+        }
         String command = "";
         while (!"terminate".equals(command)) {
             command = scanner.nextLine();

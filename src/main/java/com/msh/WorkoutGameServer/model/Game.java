@@ -22,8 +22,11 @@ public class Game {
     private List<Player> players = new ArrayList<>();
     private Map<String, Integer> totalStockNumbers = new LinkedHashMap<>();
     private Map<String, Integer> exerciseValues = new LinkedHashMap<>();
-    private List<Color> freeColors = Arrays.asList(Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE,
-            Color.BLACK, Color.BROWN, Color.PURPLE, Color.YELLOW, Color.CYAN);
+    private List<Color> freeColors = Arrays.asList(
+            Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.CYAN,
+            Color.NAVY, Color.BROWN, Color.PURPLE, Color.YELLOW, Color.MAGENTA,
+            Color.MAROON, Color.TEAL, Color.OLIVE, Color.LIME, Color.GOLD
+    );
 
     private boolean subscriptionOn;
     private boolean started;
@@ -80,6 +83,13 @@ public class Game {
         }
     }
 
+    public void setVisionIncPriceForPlayers() {
+        int price = Constants.DEFAULT_VISION_INC_PRICE / players.size();
+        for (var player : players) {
+            player.setVisionIncPrice(price);
+        }
+    }
+
     public void setPlayerPosition(String playerName, Coordinate position) {
         players.stream()
                 .filter(p -> p.getName().equals(playerName))
@@ -124,14 +134,31 @@ public class Game {
     }
 
     public void stockBought(String playerName, String exercise) {
-        int prevValue = totalStockNumbers.get(exercise);
-        totalStockNumbers.put(exercise, prevValue + 1);
-
         Player player = getPlayerByName(playerName);
-        int playerPrevValue = player.getStockNumbers().get(exercise);
-        player.getStockNumbers().put(exercise, playerPrevValue + 1);
+        if (player.isStockAffordable(exercise)) {
+            int prevValue = totalStockNumbers.get(exercise);
+            totalStockNumbers.put(exercise, prevValue + 1);
 
-        int price = PriceCalculator.calculate(totalStockNumbers.get(exercise));
-        player.decMoney(price);
+            int playerPrevValue = player.getStockNumbers().get(exercise);
+            player.getStockNumbers().put(exercise, playerPrevValue + 1);
+
+            int price = PriceCalculator.calculate(totalStockNumbers.get(exercise));
+            player.decMoney(price);
+        }
+    }
+
+    public void exerciseDone(String playerName, String exercise, int amount) {
+        Player player = getPlayerByName(playerName);
+        player.incExerciseValue(exercise, amount);
+        player.incScore((int) Math.ceil(exerciseValues.get(exercise) * getSharePercentage(player, exercise) / 100.0) * amount);
+    }
+
+    public int getSharePercentage(Player player, String exercise) {
+        return (int) Math.floor(player.getStockNumbers().get(exercise) * 100 / (double) totalStockNumbers.get(exercise));
+    }
+
+    public void incVision(String playerName) {
+        Player player = getPlayerByName(playerName);
+        player.incRangeOfVision();
     }
 }
