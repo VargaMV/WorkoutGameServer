@@ -29,7 +29,7 @@ public class Game {
     );
 
     private boolean subscriptionOn;
-    private boolean started;
+    private boolean running;
 
     private LocalDateTime creationDate;
 
@@ -66,7 +66,7 @@ public class Game {
                 "title=" + title +
                 ", mapSize=" + mapSize +
                 ", subscriptionOn=" + subscriptionOn +
-                ", started=" + started +
+                ", started=" + running +
                 ", creationDate=" + creationDate +
                 '}';
     }
@@ -110,6 +110,10 @@ public class Game {
         map[field.getX()][field.getY()].setOwner(new SimplePlayer(newOwner));
     }
 
+    public SimplePlayer getFieldOwner(Coordinate field) {
+        return map[field.getX()][field.getY()].getOwner();
+    }
+
     public void addPlayer(String playerName) {
         Random rand = new Random();
         Color color = freeColors.remove(rand.nextInt(freeColors.size()));
@@ -125,12 +129,18 @@ public class Game {
         return players.stream().filter(p -> p.getName().equals(name)).findFirst().orElse(null);
     }
 
-    public void occupy(Coordinate target, Player newOwner) {
+    public Player occupy(Coordinate target, Player newOwner) {
+        Player prevOwner = getPlayerByName(getFieldOwner(target).getName());
+        if (prevOwner != null) {
+            prevOwner.decFieldsOwned();
+        }
         setFieldOwner(target, newOwner);
         int playerIndex = players.indexOf(newOwner);
         int value = players.get(playerIndex).getCurrentScore();
         map[target.getX()][target.getY()].setValue(value);
         players.get(playerIndex).setCurrentScore(0);
+        players.get(playerIndex).incFieldsOwned();
+        return prevOwner;
     }
 
     public void stockBought(String playerName, String exercise) {
@@ -160,5 +170,11 @@ public class Game {
     public void incVision(String playerName) {
         Player player = getPlayerByName(playerName);
         player.incRangeOfVision();
+    }
+
+    public void convertScoreToMoney(String playerName, int amount) {
+        Player player = getPlayerByName(playerName);
+        player.incMoney(amount);
+        player.decScore(amount);
     }
 }

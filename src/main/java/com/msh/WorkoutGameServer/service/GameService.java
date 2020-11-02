@@ -18,16 +18,19 @@ public interface GameService {
 
     JoinResponse joinGame(GameMessage msg);
 
-    void modifyMap(GameMessage msg);
-
+    Player modifyMap(GameMessage msg);
     void modifyStocks(GameMessage msg);
-
     void saveExerciseReps(GameMessage msg);
-
     void saveVisionInc(GameMessage msg);
+
+    void executeConversion(GameMessage msg);
+
+    void saveTime(GameMessage msg);
 
     Game getGame();
     Player getPlayer(String name);
     Field[][] getMap();
     Map<String, Integer> getStocks();
+
+    Map<String, Integer> getExerciseValues();
 }

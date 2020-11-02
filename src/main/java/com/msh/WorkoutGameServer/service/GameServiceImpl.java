@@ -6,14 +6,13 @@ import com.msh.WorkoutGameServer.model.Field;
 import com.msh.WorkoutGameServer.model.Game;
 import com.msh.WorkoutGameServer.model.Player;
 import com.msh.WorkoutGameServer.model.message.MessageType;
-import com.msh.WorkoutGameServer.model.message.in.GameMessage;
-import com.msh.WorkoutGameServer.model.message.in.PlayerExerciseMessage;
-import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
-import com.msh.WorkoutGameServer.model.message.in.PlayerOccupationMessage;
+import com.msh.WorkoutGameServer.model.message.in.*;
 import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
@@ -46,7 +45,7 @@ public class GameServiceImpl implements GameService {
     @Override
     public void start() {
         Game game = getGame();
-        game.setStarted(true);
+        game.setRunning(true);
         game.setSubscriptionOn(false);
         game.randomizePlayerPositions();
         game.setVisionIncPriceForPlayers();
@@ -56,14 +55,25 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public void stop() {
-        System.out.println("Stopping game...");
+        Game game = getGame();
+        game.setRunning(false);
     }
 
     @Override
     public JoinResponse joinGame(GameMessage msg) {
         String playerName = msg.getFrom();
         Game game = getGame();
-        if (game.isStarted() && game.isPlayerExist(playerName)) {
+        Player player = game.getPlayerByName(playerName);
+        if (player != null) {
+            player.setLastConnect(LocalDateTime.now());
+            if (player.getLastDisconnect() != null) {
+                Duration duration = Duration.between(player.getLastDisconnect(), player.getLastConnect());
+                int time = player.getSecondsUntilMove();
+                player.setSecondsUntilMove((int) Math.max(time - duration.getSeconds(), 0));
+                gameDataAccess.save(game);
+            }
+        }
+        if (game.isRunning() && game.isPlayerExist(playerName)) {
             return JoinResponse.GAME;
         } else if (game.isPlayerExist(playerName)) {
             return JoinResponse.USED;
@@ -100,22 +110,29 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void modifyMap(GameMessage msg) {
+    public Map<String, Integer> getExerciseValues() {
+        Game game = getGame();
+        return game.getExerciseValues();
+    }
+
+    @Override
+    public Player modifyMap(GameMessage msg) {
         String playerName = msg.getFrom();
         Game game = getGame();
         if (msg.getType() == MessageType.MOVE) {
             Coordinate from = ((PlayerMoveMessage) msg).getPrevPos();
             Coordinate to = ((PlayerMoveMessage) msg).getNewPos();
-
             game.setPlayerPosition(playerName, to);
             game.setPlayerPositionOnMap(playerName, from, to);
+            this.gameDataAccess.save(game);
         } else if (msg.getType() == MessageType.OCCUPY) {
             Coordinate target = ((PlayerOccupationMessage) msg).getOccupiedField();
             Player newOwner = game.getPlayerByName(playerName);
-            game.occupy(target, newOwner);
+            Player prevPlayer = game.occupy(target, newOwner);
+            this.gameDataAccess.save(game);
+            return prevPlayer;
         }
-
-        this.gameDataAccess.save(game);
+        return null;
     }
 
     @Override
@@ -142,6 +159,25 @@ public class GameServiceImpl implements GameService {
         String playerName = msg.getFrom();
         Game game = getGame();
         game.incVision(playerName);
+        this.gameDataAccess.save(game);
+    }
+
+    @Override
+    public void executeConversion(GameMessage msg) {
+        String playerName = msg.getFrom();
+        Game game = getGame();
+        game.convertScoreToMoney(playerName, ((PlayerConversionMessage) msg).getAmount());
+        this.gameDataAccess.save(game);
+    }
+
+    @Override
+    public void saveTime(GameMessage msg) {
+        String playerName = msg.getFrom();
+        Game game = getGame();
+        Player player = game.getPlayerByName(playerName);
+        player.setLastDisconnect(LocalDateTime.now());
+        int remainingTime = ((PlayerTimeMessage) msg).getSeconds();
+        player.setSecondsUntilMove(remainingTime);
         this.gameDataAccess.save(game);
     }
 }

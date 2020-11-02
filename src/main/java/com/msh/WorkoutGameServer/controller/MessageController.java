@@ -1,9 +1,7 @@
 package com.msh.WorkoutGameServer.controller;
 
-import com.msh.WorkoutGameServer.model.message.in.GameMessage;
-import com.msh.WorkoutGameServer.model.message.in.PlayerExerciseMessage;
-import com.msh.WorkoutGameServer.model.message.in.PlayerMoveMessage;
-import com.msh.WorkoutGameServer.model.message.in.PlayerOccupationMessage;
+import com.msh.WorkoutGameServer.model.Player;
+import com.msh.WorkoutGameServer.model.message.in.*;
 import com.msh.WorkoutGameServer.model.message.out.*;
 import com.msh.WorkoutGameServer.service.GameServiceImpl;
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +43,8 @@ public class MessageController {
                         this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse("Server", msg.getFrom() + " joined the game.", response.toString()));
                         this.simpleMessagingTemplate.convertAndSend("/private/player/" + msg.getFrom(), new PlayerStateResponse("Server", "Player update!", "PLAYER", gameService.getPlayer(msg.getFrom())));
                         this.simpleMessagingTemplate.convertAndSend("/private/map/" + msg.getFrom(), new MapStateResponse("Server", "Map update!", "MAP", gameService.getMap()));
-                        this.simpleMessagingTemplate.convertAndSend("/public/stock", new StocksStateResponse(msg.getFrom(), "Stocks update!", "STOCK", gameService.getStocks()));
+                        this.simpleMessagingTemplate.convertAndSend("/public/stock", new ExerciseInfoResponse(msg.getFrom(), "Stocks update!", "STOCK", gameService.getStocks()));
+                        this.simpleMessagingTemplate.convertAndSend("/private/exercise/" + msg.getFrom(), new ExerciseInfoResponse(msg.getFrom(), "Exercise update!", "EXERCISE", gameService.getExerciseValues()));
 
                         break;
                     case OFF:
@@ -68,15 +67,18 @@ public class MessageController {
     @MessageMapping("/action/occupy")
     public void handlePlayerOccupation(@Payload PlayerOccupationMessage msg) {
         logger.info(msg.getFrom() + " occupied " + msg.getOccupiedField());
-        gameService.modifyMap(msg);
+        Player prevPlayer = gameService.modifyMap(msg);
         this.simpleMessagingTemplate.convertAndSend("/public/map", new MapStateResponse(msg.getFrom(), "Map occupy update!", "MAP", gameService.getMap()));
+        if (prevPlayer != null) {
+            this.simpleMessagingTemplate.convertAndSend("/private/player/" + prevPlayer.getName(), new PlayerStateResponse("Server", "Player update!", "PLAYER", prevPlayer));
+        }
     }
 
     @MessageMapping("/action/stock")
     public void handlePlayerBuying(@Payload GameMessage msg) {
         logger.info(msg.getFrom() + " bought a(n) " + msg.getText() + " stock.");
         gameService.modifyStocks(msg);
-        this.simpleMessagingTemplate.convertAndSend("/public/stock", new StocksStateResponse(msg.getFrom(), "Stocks update!", "STOCK", gameService.getStocks()));
+        this.simpleMessagingTemplate.convertAndSend("/public/stock", new ExerciseInfoResponse(msg.getFrom(), "Stocks update!", "STOCK", gameService.getStocks()));
     }
 
     @MessageMapping("/action/exercise")
@@ -89,5 +91,17 @@ public class MessageController {
     public void handlePlayerVisionInc(@Payload GameMessage msg) {
         logger.info(msg.getFrom() + " has better vision now. ");
         gameService.saveVisionInc(msg);
+    }
+
+    @MessageMapping("/action/convert")
+    public void handlePlayerConversion(@Payload PlayerConversionMessage msg) {
+        logger.info(msg.getFrom() + " converted " + msg.getAmount() + " score to money. ");
+        gameService.executeConversion(msg);
+    }
+
+    @MessageMapping("/action/time")
+    public void handlePlayerTimeUntilMove(@Payload PlayerTimeMessage msg) {
+        logger.info(msg.getFrom() + " logged out and " + msg.getSeconds() + " seconds remained on the clock. ");
+        gameService.saveTime(msg);
     }
 }

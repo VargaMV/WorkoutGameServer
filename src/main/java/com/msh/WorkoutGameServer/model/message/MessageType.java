@@ -6,5 +6,7 @@ public enum MessageType {
     OCCUPY,
     STOCK,
     EXERCISE,
-    VISION
+    VISION,
+    CONVERT,
+    TIME
 }

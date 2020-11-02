@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.io.File;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -20,9 +21,13 @@ public class Player implements Comparable<Player>, Serializable {
     private int money;
     private int currentScore;
     private int totalScore;
+    private int fieldsOwned;
     private boolean sqrRange;
     private int rangeOfVision;
     private int visionIncPrice;
+    private int secondsUntilMove;
+    private LocalDateTime lastConnect;
+    private LocalDateTime lastDisconnect;
     private Map<String, Integer> exerciseNumbers = new LinkedHashMap<>();
     private Map<String, Integer> stockNumbers = new LinkedHashMap<>();
 
@@ -63,6 +68,14 @@ public class Player implements Comparable<Player>, Serializable {
 
     public void decScore(int score) {
         currentScore -= score;
+    }
+
+    public void incFieldsOwned() {
+        fieldsOwned++;
+    }
+
+    public void decFieldsOwned() {
+        fieldsOwned--;
     }
 
     public boolean isStockAffordable(String exercise) {
