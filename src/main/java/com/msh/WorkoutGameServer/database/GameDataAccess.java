@@ -7,5 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GameDataAccess extends MongoRepository<Game, String> {
     Game findFirstByOrderByIdDesc();
+
+    Game findLastByTitle(String title);
 }
 

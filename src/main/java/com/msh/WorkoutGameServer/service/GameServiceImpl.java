@@ -1,68 +1,71 @@
 package com.msh.WorkoutGameServer.service;
 
 import com.msh.WorkoutGameServer.database.GameDataAccess;
-import com.msh.WorkoutGameServer.model.Coordinate;
-import com.msh.WorkoutGameServer.model.Field;
-import com.msh.WorkoutGameServer.model.Game;
-import com.msh.WorkoutGameServer.model.Player;
+import com.msh.WorkoutGameServer.logic.PriceCalculator;
+import com.msh.WorkoutGameServer.model.*;
+import com.msh.WorkoutGameServer.model.message.ConnectionResponseEnum;
 import com.msh.WorkoutGameServer.model.message.MessageType;
 import com.msh.WorkoutGameServer.model.message.in.*;
-import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
+import com.msh.WorkoutGameServer.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
-public class GameServiceImpl implements GameService {
+public
+class GameServiceImpl implements GameService {
+
     @Autowired
     private GameDataAccess gameDataAccess;
 
+    @Autowired
+    private UserServiceImpl userService;
+
     @Override
     public void createGame(Game game) {
+        //TODO: if title is unique
         this.gameDataAccess.save(game);
     }
 
     @Override
-    public void switchSub() {
-        Game latestGame = this.gameDataAccess.findFirstByOrderByIdDesc();
-        boolean sub = latestGame.isSubscriptionOn();
-        latestGame.setSubscriptionOn(!sub);
-        this.gameDataAccess.save(latestGame);
-        System.out.println(latestGame);
+    public void deleteGame(String id) {
+        gameDataAccess.deleteById(id);
     }
 
     @Override
-    public void switchSubTo(boolean to) {
-        Game game = getGame();
-        game.setSubscriptionOn(to);
-        this.gameDataAccess.save(game);
-        System.out.println(game);
-    }
-
-    @Override
-    public void start() {
-        Game game = getGame();
+    public void start(String id) {
+        Game game = getGame(id);
+        PriceCalculator.exponent = game.getPriceIncExponent();
         game.setRunning(true);
         game.setSubscriptionOn(false);
         game.randomizePlayerPositions();
         game.setVisionIncPriceForPlayers();
         this.gameDataAccess.save(game);
-        System.out.println(game);
     }
 
     @Override
-    public void stop() {
-        Game game = getGame();
+    public void stop(String id) {
+        Game game = getGame(id);
         game.setRunning(false);
+        gameDataAccess.save(game);
+        List<Player> players = game.getResults();
+        int i = 1;
+        for (var player : players) {
+            System.out.printf("%d. place: %s -> fields: %d -> total: %d\n", i, player.getName(), player.getFieldsOwned(), player.getTotalScore());
+            i++;
+        }
     }
 
     @Override
-    public JoinResponse joinGame(GameMessage msg) {
+    public ConnectionResponseEnum joinGame(GameMessage msg) {
         String playerName = msg.getFrom();
-        Game game = getGame();
+        Game game = getGame(msg.getText());
+        userService.setCurrentGame(playerName, msg.getText());
         Player player = game.getPlayerByName(playerName);
         if (player != null) {
             player.setLastConnect(LocalDateTime.now());
@@ -74,51 +77,90 @@ public class GameServiceImpl implements GameService {
             }
         }
         if (game.isRunning() && game.isPlayerExist(playerName)) {
-            return JoinResponse.GAME;
+            return ConnectionResponseEnum.GAME;
         } else if (game.isPlayerExist(playerName)) {
-            return JoinResponse.USED;
+            return ConnectionResponseEnum.USED;
         } else if (game.isSubscriptionOn() && game.getFreeColors().size() > 0) {
             game.addPlayer(playerName);
             gameDataAccess.save(game);
-            return JoinResponse.SUB;
+            return ConnectionResponseEnum.SUB;
         } else {
-            return JoinResponse.OFF;
+            return ConnectionResponseEnum.OFF;
         }
     }
 
     @Override
-    public Game getGame() {
+    public Game getGame(String id) {
+        return gameDataAccess.findById(id).orElse(null);
+    }
+
+    @Override
+    public Game getLastGame() {
         return this.gameDataAccess.findFirstByOrderByIdDesc();
     }
 
     @Override
-    public Player getPlayer(String name) {
-        Game game = getGame();
-        return game.getPlayerByName(name);
+    public Player getPlayer(String playerName) {
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
+        return game.getPlayerByName(playerName);
     }
 
     @Override
-    public Field[][] getMap() {
-        Game game = getGame();
+    public Field[][] getMap(String playerName) {
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
         return game.getMap();
     }
 
     @Override
-    public Map<String, Integer> getStocks() {
-        Game game = getGame();
+    public Map<String, Integer> getAllStocks(String playerName) {
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
         return game.getTotalStockNumbers();
     }
 
     @Override
-    public Map<String, Integer> getExerciseValues() {
-        Game game = getGame();
-        return game.getExerciseValues();
+    public Map<String, Integer> getStocks(String playerName) {
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
+        return game.getPlayerByName(playerName).getStockNumbers();
+    }
+
+    @Override
+    public void showPlayers(String gameId) {
+        Game game = getGame(gameId);
+        game.getPlayers().forEach(System.out::println);
+    }
+
+    @Override
+    public List<Player> getPlayersRanked(String gameId) {
+        return getGame(gameId).getResults();
+    }
+
+    @Override
+    public List<SimpleGame> getActiveSimpleGames() {
+        return gameDataAccess.findAll()
+                .stream()
+                .filter(g -> (g.isRunning() || g.isSubscriptionOn()))
+                .map(SimpleGame::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AdminGame> getActiveGames() {
+        return gameDataAccess.findAll()
+                .stream()
+                .filter(g -> (g.isRunning() || g.isSubscriptionOn()))
+                .map(AdminGame::new)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Player modifyMap(GameMessage msg) {
         String playerName = msg.getFrom();
-        Game game = getGame();
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
         if (msg.getType() == MessageType.MOVE) {
             Coordinate from = ((PlayerMoveMessage) msg).getPrevPos();
             Coordinate to = ((PlayerMoveMessage) msg).getNewPos();
@@ -138,7 +180,8 @@ public class GameServiceImpl implements GameService {
     @Override
     public void modifyStocks(GameMessage msg) {
         String playerName = msg.getFrom();
-        Game game = getGame();
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
         String exercise = msg.getText();
         game.stockBought(playerName, exercise);
         this.gameDataAccess.save(game);
@@ -147,9 +190,10 @@ public class GameServiceImpl implements GameService {
     @Override
     public void saveExerciseReps(GameMessage msg) {
         String playerName = msg.getFrom();
-        Game game = getGame();
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
         String exercise = ((PlayerExerciseMessage) msg).getExercise();
-        int amount = ((PlayerExerciseMessage) msg).getAmount();
+        double amount = ((PlayerExerciseMessage) msg).getAmount();
         game.exerciseDone(playerName, exercise, amount);
         this.gameDataAccess.save(game);
     }
@@ -157,7 +201,8 @@ public class GameServiceImpl implements GameService {
     @Override
     public void saveVisionInc(GameMessage msg) {
         String playerName = msg.getFrom();
-        Game game = getGame();
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
         game.incVision(playerName);
         this.gameDataAccess.save(game);
     }
@@ -165,7 +210,8 @@ public class GameServiceImpl implements GameService {
     @Override
     public void executeConversion(GameMessage msg) {
         String playerName = msg.getFrom();
-        Game game = getGame();
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
         game.convertScoreToMoney(playerName, ((PlayerConversionMessage) msg).getAmount());
         this.gameDataAccess.save(game);
     }
@@ -173,11 +219,36 @@ public class GameServiceImpl implements GameService {
     @Override
     public void saveTime(GameMessage msg) {
         String playerName = msg.getFrom();
-        Game game = getGame();
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
         Player player = game.getPlayerByName(playerName);
         player.setLastDisconnect(LocalDateTime.now());
         int remainingTime = ((PlayerTimeMessage) msg).getSeconds();
         player.setSecondsUntilMove(remainingTime);
         this.gameDataAccess.save(game);
     }
+
+    @Override
+    public String getGameId(GameMessage msg) {
+        String playerName = msg.getFrom();
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
+        return game.getId();
+    }
+
+    @Override
+    public GameDTO getGameDTO(String playerName) {
+        User user = userService.findByName(playerName);
+        Game game = getGame(user.getCurrentGameId());
+        return GameDTO.builder()
+                .id(game.getId())
+                .map(game.getMap())
+                .player(game.getPlayerByName(playerName))
+                .exerciseValues(game.getExerciseValues())
+                .totalStockNumbers(game.getTotalStockNumbers())
+                .waitingTime(game.getWaitingTime())
+                .priceIncExponent(game.getPriceIncExponent())
+                .build();
+    }
+
 }

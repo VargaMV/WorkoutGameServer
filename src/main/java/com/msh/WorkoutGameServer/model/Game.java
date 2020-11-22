@@ -21,7 +21,7 @@ public class Game {
     private Field[][] map;
     private List<Player> players = new ArrayList<>();
     private Map<String, Integer> totalStockNumbers = new LinkedHashMap<>();
-    private Map<String, Integer> exerciseValues = new LinkedHashMap<>();
+    private Map<String, Exercise> exerciseValues = new LinkedHashMap<>();
     private List<Color> freeColors = Arrays.asList(
             Color.RED, Color.BLUE, Color.GREEN, Color.ORANGE, Color.CYAN,
             Color.NAVY, Color.BROWN, Color.PURPLE, Color.YELLOW, Color.MAGENTA,
@@ -32,12 +32,20 @@ public class Game {
     private boolean running;
 
     private LocalDateTime creationDate;
+    private int waitingTime;
+    private double priceIncExponent;
 
-    public Game(String title, int mapSize) {
+    /*public Game(GameInit init) {
+        this(init.getTitle(), init.getMapSize(), init.getWaitingTime());
+    }*/
+
+    public Game(String title, int mapSize, int waitingTime) {
         this.title = title;
         this.mapSize = mapSize;
         this.creationDate = LocalDateTime.now();
         this.subscriptionOn = true;
+        this.waitingTime = waitingTime;
+        this.priceIncExponent = Constants.PRICE_INCREASE_EXPONENT;
         this.map = new Field[mapSize][mapSize];
         for (int i = 0; i < mapSize; i++) {
             for (int j = 0; j < mapSize; j++) {
@@ -52,7 +60,8 @@ public class Game {
                 String[] parts = dataLine.split(",");
                 String name = parts[0].trim();
                 int value = Integer.parseInt(parts[1]);
-                exerciseValues.put(name, value);
+                String type = parts[2].trim();
+                exerciseValues.put(name, new Exercise(name, type, value));
                 totalStockNumbers.put(name, 0);
             }
         } catch (Exception e) {
@@ -137,7 +146,11 @@ public class Game {
         setFieldOwner(target, newOwner);
         int playerIndex = players.indexOf(newOwner);
         int value = players.get(playerIndex).getCurrentScore();
-        map[target.getX()][target.getY()].setValue(value);
+        if (prevOwner == newOwner) {
+            map[target.getX()][target.getY()].addValue(value);
+        } else {
+            map[target.getX()][target.getY()].setValue(value);
+        }
         players.get(playerIndex).setCurrentScore(0);
         players.get(playerIndex).incFieldsOwned();
         return prevOwner;
@@ -152,15 +165,16 @@ public class Game {
             int playerPrevValue = player.getStockNumbers().get(exercise);
             player.getStockNumbers().put(exercise, playerPrevValue + 1);
 
-            int price = PriceCalculator.calculate(totalStockNumbers.get(exercise));
+            int price = PriceCalculator.calculate(player.getStockNumbers().get(exercise));
             player.decMoney(price);
         }
     }
 
-    public void exerciseDone(String playerName, String exercise, int amount) {
+    public void exerciseDone(String playerName, String exercise, double amount) {
         Player player = getPlayerByName(playerName);
-        player.incExerciseValue(exercise, amount);
-        player.incScore((int) Math.ceil(exerciseValues.get(exercise) * getSharePercentage(player, exercise) / 100.0) * amount);
+        int roundedAmount = (int) Math.round(amount - 0.25);
+        player.incExerciseValue(exercise, roundedAmount);
+        player.incScore((int) Math.ceil(exerciseValues.get(exercise).getValue() * getSharePercentage(player, exercise) / 100.0) * roundedAmount);
     }
 
     public int getSharePercentage(Player player, String exercise) {
@@ -176,5 +190,13 @@ public class Game {
         Player player = getPlayerByName(playerName);
         player.incMoney(amount);
         player.decScore(amount);
+    }
+
+    public List<Player> getResults() {
+        players.sort(
+                Comparator.comparing(Player::getFieldsOwned, Comparator.reverseOrder())
+                        .thenComparing(Player::getTotalScore, Comparator.reverseOrder())
+        );
+        return players;
     }
 }

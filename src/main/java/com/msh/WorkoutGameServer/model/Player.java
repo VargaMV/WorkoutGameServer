@@ -64,6 +64,7 @@ public class Player implements Comparable<Player>, Serializable {
 
     public void incScore(int score) {
         currentScore += score;
+        totalScore += score;
     }
 
     public void decScore(int score) {

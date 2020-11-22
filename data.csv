@@ -1,50 +1,54 @@
-ab rollout              ,11
-archer push-up          ,46
-austral pull-up         ,39
-bench dip               ,16
-bicep curl              ,11
-black widow knee slides ,30
-calf raise              ,12
-chin-up                 ,39
-close grip push-up      ,33
-dead hang               ,5
-dish tuck               ,40
-extensor curl           ,31
-Face pull               ,15
-flexor curl             ,27
-frogstand               ,9
-hammer curl             ,10
-handstand at the wall   ,4
-hanging knee raise      ,25
-high plank              ,8
-jump rope               ,4
-jump squat              ,31
-jumping lunges          ,58
-leg lift                ,21
-legs curls              ,12
-low plank               ,11
-L-sit                   ,9
-lunges                  ,21
-marching plank          ,22
-narrow squat            ,15
-natural grip pull-up    ,37
-pike push up            ,17
-pull-up                 ,16
-push-up                 ,13
-reacher rows            ,17
-rotational push-up      ,38
-russian twist           ,7
-side heel touch         ,12
-side lunges             ,20
-side plank raises       ,22
-side plank reach through,37
-side plank              ,8
-single leg box squat    ,55
-single leg half bridge  ,22
-single leg wall sit     ,26
-sit up                  ,12
-squat                   ,10
-up & down plank         ,58
-wall sit                ,9
-wide pull-up            ,41
-wide push-up            ,20
+running					,350,km
+cycling					,200,km
+home workout			,160,min
+yoga					,100,min
+ab rollout              ,11,rep
+archer push-up          ,46,rep
+austral pull-up         ,39,rep
+bench dip               ,16,rep
+bicep curl              ,11,rep
+black widow knee slides ,30,rep
+calf raise              ,12,rep
+chin-up                 ,39,rep
+close grip push-up      ,33,rep
+dead hang               ,6,sec
+dish tuck               ,40,rep
+extensor curl           ,31,rep
+Face pull               ,15,rep
+flexor curl             ,27,rep
+frogstand               ,9,sec
+hammer curl             ,10,rep
+handstand at the wall   ,6,sec
+hanging knee raise      ,25,rep
+high plank              ,8,sec
+jump rope               ,4,rep
+jump squat              ,31,rep
+jumping lunges          ,52,rep
+leg lift                ,21,rep
+legs curls              ,12,rep
+low plank               ,11,sec
+L-sit                   ,9,sec
+lunges                  ,21,rep
+marching plank          ,22,rep
+narrow squat            ,15,rep
+natural grip pull-up    ,37,rep
+pike push up            ,17,rep
+pull-up                 ,16,rep
+push-up                 ,13,rep
+reacher rows            ,17,rep
+rotational push-up      ,38,rep
+russian twist           ,7,rep
+side heel touch         ,12,rep
+side lunges             ,20,rep
+side plank raises       ,22,rep
+side plank reach through,37,rep
+side plank              ,8,sec
+single leg box squat    ,55,rep
+single leg half bridge  ,22,rep
+single leg wall sit     ,26,sec
+sit up                  ,12,rep
+squat                   ,10,rep
+up & down plank         ,58,rep
+wall sit                ,9,rep
+wide pull-up            ,41,rep
+wide push-up            ,20,rep

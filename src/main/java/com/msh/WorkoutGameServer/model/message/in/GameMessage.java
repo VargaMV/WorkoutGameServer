@@ -18,4 +18,10 @@ public class GameMessage extends SimpleMessage {
         super(from, text);
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return super.toString() +
+                " type=" + type;
+    }
 }

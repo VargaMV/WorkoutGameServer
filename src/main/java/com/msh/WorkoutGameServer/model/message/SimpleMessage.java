@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 @Getter
 @Setter
-abstract public class SimpleMessage implements Serializable {
+public class SimpleMessage implements Serializable {
     String from;
     String text;
 
@@ -18,5 +18,11 @@ abstract public class SimpleMessage implements Serializable {
     public SimpleMessage(String from, String text) {
         this.from = from;
         this.text = text;
+    }
+
+    @Override
+    public String toString() {
+        return "from='" + from + '\'' +
+                ", text='" + text;
     }
 }

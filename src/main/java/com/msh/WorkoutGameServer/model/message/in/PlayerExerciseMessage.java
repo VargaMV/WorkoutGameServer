@@ -9,12 +9,12 @@ import lombok.Setter;
 public class PlayerExerciseMessage extends GameMessage {
 
     private String exercise;
-    private int amount;
+    private double amount;
 
     public PlayerExerciseMessage() {
     }
 
-    public PlayerExerciseMessage(String from, String text, String exercise, int amount) {
+    public PlayerExerciseMessage(String from, String text, String exercise, double amount) {
         super(MessageType.EXERCISE, from, text);
         this.exercise = exercise;
         this.amount = amount;

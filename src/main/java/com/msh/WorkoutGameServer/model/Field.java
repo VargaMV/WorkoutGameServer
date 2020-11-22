@@ -27,6 +27,10 @@ public class Field {
         playersOnField.add(new SimplePlayer(player));
     }
 
+    public void addValue(int value) {
+        this.value += value;
+    }
+
     @Override
     public String toString() {
         boolean isPlayer = playersOnField.size() > 0;

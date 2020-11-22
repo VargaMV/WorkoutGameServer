@@ -13,7 +13,7 @@ public class PlayerConversionMessage extends GameMessage {
     public PlayerConversionMessage() {
     }
 
-    public PlayerConversionMessage(String from, String text, String exercise, int amount) {
+    public PlayerConversionMessage(String from, String text, int amount) {
         super(MessageType.CONVERT, from, text);
         this.amount = amount;
     }

@@ -1,36 +1,56 @@
 package com.msh.WorkoutGameServer.service;
 
-import com.msh.WorkoutGameServer.model.Field;
-import com.msh.WorkoutGameServer.model.Game;
-import com.msh.WorkoutGameServer.model.Player;
+import com.msh.WorkoutGameServer.model.*;
+import com.msh.WorkoutGameServer.model.message.ConnectionResponseEnum;
 import com.msh.WorkoutGameServer.model.message.in.GameMessage;
-import com.msh.WorkoutGameServer.model.message.out.JoinResponse;
 
+import java.util.List;
 import java.util.Map;
 
 public interface GameService {
     void createGame(Game game);
 
-    void switchSub();
-    void switchSubTo(boolean to);
-    void start();
-    void stop();
+    void deleteGame(String id);
 
-    JoinResponse joinGame(GameMessage msg);
+    void start(String gameId);
+
+    void stop(String gameId);
+
+    ConnectionResponseEnum joinGame(GameMessage msg);
 
     Player modifyMap(GameMessage msg);
+
     void modifyStocks(GameMessage msg);
+
     void saveExerciseReps(GameMessage msg);
+
     void saveVisionInc(GameMessage msg);
 
     void executeConversion(GameMessage msg);
 
     void saveTime(GameMessage msg);
 
-    Game getGame();
-    Player getPlayer(String name);
-    Field[][] getMap();
-    Map<String, Integer> getStocks();
+    String getGameId(GameMessage msg);
 
-    Map<String, Integer> getExerciseValues();
+    GameDTO getGameDTO(String playerName);
+
+    Game getLastGame();
+
+    Game getGame(String id);
+
+    Player getPlayer(String name);
+
+    Field[][] getMap(String playerName);
+
+    Map<String, Integer> getAllStocks(String playerName);
+
+    Map<String, Integer> getStocks(String playerName);
+
+    void showPlayers(String gameId);
+
+    List<Player> getPlayersRanked(String gameId);
+
+    List<SimpleGame> getActiveSimpleGames();
+
+    List<AdminGame> getActiveGames();
 }

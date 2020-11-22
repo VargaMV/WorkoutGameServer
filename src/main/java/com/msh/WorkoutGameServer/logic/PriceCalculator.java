@@ -2,7 +2,7 @@ package com.msh.WorkoutGameServer.logic;
 
 public class PriceCalculator {
 
-    static double exponent = 1.3;
+    public static double exponent = 1;
 
     public static int calculate(int ownedNumber) {
         return (int) Math.round(Math.pow(ownedNumber, exponent));
