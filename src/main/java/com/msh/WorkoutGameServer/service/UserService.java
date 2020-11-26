@@ -12,5 +12,5 @@ public interface UserService {
 
     boolean isPasswordValid(LoginUser user);
 
-    void setCurrentGame(String name, String gameId);
+    void setCurrentGameId(String name, String gameId);
 }

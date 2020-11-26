@@ -64,8 +64,14 @@ class GameServiceImpl implements GameService {
     @Override
     public ConnectionResponseEnum joinGame(GameMessage msg) {
         String playerName = msg.getFrom();
-        Game game = getGame(msg.getText());
-        userService.setCurrentGame(playerName, msg.getText());
+        User user = userService.findByName(playerName);
+        if (!msg.getText().equals("")) {
+            userService.setCurrentGameId(playerName, msg.getText());
+        }
+        if (user.getCurrentGameId().equals("")) {
+            return ConnectionResponseEnum.NULL;
+        }
+        Game game = getGame(user.getCurrentGameId());
         Player player = game.getPlayerByName(playerName);
         if (player != null) {
             player.setLastConnect(LocalDateTime.now());

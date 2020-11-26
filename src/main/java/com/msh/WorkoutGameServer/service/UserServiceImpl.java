@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void setCurrentGame(String name, String gameId) {
+    public void setCurrentGameId(String name, String gameId) {
         User user = findByName(name);
         user.setCurrentGameId(gameId);
         userDataAccess.save(user);

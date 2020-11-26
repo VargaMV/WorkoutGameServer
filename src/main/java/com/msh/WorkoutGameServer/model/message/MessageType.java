@@ -9,5 +9,6 @@ public enum MessageType {
     EXERCISE,
     VISION,
     CONVERT,
-    TIME
+    TIME,
+    PLAYERS
 }

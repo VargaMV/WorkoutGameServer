@@ -42,43 +42,48 @@ public class PlayerMessageController {
                 User newUser = userService.save(msg.getUser());
                 if (newUser == null) {
                     log.info("Failed registration: " + msg.getFrom());
-                    this.simpleMessagingTemplate.convertAndSend("/private/connection/" + msg.getFrom(), new SimpleResponse("Server", "This name is already in use.", "USED"));
+                    this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "This name is already in use.", "USED"));
                 } else {
                     log.info("Successful registration: " + msg.getFrom());
-                    this.simpleMessagingTemplate.convertAndSend("/private/connection/" + msg.getFrom(), new SimpleResponse("Server", "Successful registration!", "SUCCESS"));
+                    this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "Successful registration!", "SUCCESS"));
                 }
                 break;
             case JOIN:
-
                 LoginUser loginUser = msg.getUser();
                 if (!userService.isUsernameTaken(loginUser)) {
                     log.info(msg.getFrom() + " couldn't join, since (s)he is not registered.");
-                    this.simpleMessagingTemplate.convertAndSend("/private/connection/" + msg.getFrom(), new SimpleResponse("Server", "You have to register first!", "INVALID"));
+                    this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "You have to register first!", "INVALID"));
                 } else if (!userService.isPasswordValid(loginUser)) {
                     log.info(msg.getFrom() + " couldn't join, since the password didn't match.");
-
-                    this.simpleMessagingTemplate.convertAndSend("/private/connection/" + msg.getFrom(), new SimpleResponse("Server", "Invalid password.", "INVALID"));
+                    this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "Invalid password.", "INVALID"));
                 } else {
                     ConnectionResponseEnum response = gameService.joinGame(msg);
                     String gameId = gameService.getGameId(msg);
                     switch (response) {
+                        case NULL:
+                            log.info(msg.getFrom() + " is not a participant in any game");
+                            //TODO: msg
                         case SUB:
                             log.info(msg.getFrom() + " successfully subscribed to the game.");
+                            this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "Successful subscription.", response.toString()));
                             this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection/" + gameId, new SimpleResponse("Server", "Successful subscription.", response.toString()));
                             this.simpleMessagingTemplate.convertAndSend("/admin/games", new GamesResponse("Server", "Active games.", "GAMES", gameService.getActiveGames()));
                             this.simpleMessagingTemplate.convertAndSend("/public/games", new SimpleGamesResponse("Server", "Active games.", "GAMES", gameService.getActiveSimpleGames()));
                             break;
                         case USED:
                             log.info(msg.getFrom() + " was unable to subscribe, because the name was already in use.");
+                            this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "You have already subscribed to the game.", response.toString()));
                             this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection/" + gameId, new SimpleResponse("Server", "You have already subscribed to the game.", response.toString()));
                             break;
                         case GAME:
                             log.info(msg.getFrom() + " joined to the game.");
+                            this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/game", new GameResponse(msg.getFrom(), "Getting game state.", response.toString(), gameService.getGameDTO(msg.getFrom())));
                             this.simpleMessagingTemplate.convertAndSend("/public", new SimpleResponse("Server", msg.getFrom() + " joined the game.", "JOIN"));
                             this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/game/" + gameId, new GameResponse(msg.getFrom(), "Getting game state.", response.toString(), gameService.getGameDTO(msg.getFrom())));
                             break;
                         case OFF:
                             log.info(msg.getFrom() + "  was unable to subscribe, because the subscription time expired.");
+                            this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "You are late to subscribe to this game.", response.toString()));
                             this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection/" + gameId, new SimpleResponse("Server", msg.getFrom() + ", you are late to subscribe to this game.", response.toString()));
                             break;
                     }
@@ -136,5 +141,12 @@ public class PlayerMessageController {
     public void handlePlayerTimeUntilMove(@Payload PlayerTimeMessage msg) {
         log.info(msg.getFrom() + " logged out and " + msg.getSeconds() + " seconds remained on the clock. ");
         gameService.saveTime(msg);
+    }
+
+    @MessageMapping("/action/players")
+    public void handleResults(@Payload GameMessage msg) {
+        log.info(msg.getFrom() + " is requesting player info.");
+        String gameId = gameService.getGameId(msg);
+        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 }
