@@ -58,11 +58,15 @@ public class PlayerMessageController {
                     this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "Invalid password.", "INVALID"));
                 } else {
                     ConnectionResponseEnum response = gameService.joinGame(msg);
-                    String gameId = gameService.getGameId(msg);
+                    String gameId = "";
+                    if (response != ConnectionResponseEnum.NULL) {
+                        gameId = gameService.getGameId(msg);
+                    }
                     switch (response) {
                         case NULL:
-                            log.info(msg.getFrom() + " is not a participant in any game");
-                            //TODO: msg
+                            log.info(msg.getFrom() + " isn't participating in any game.");
+                            this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "You are not participating in a game.\n Note that from this interface you cannot register an account or subscribe to a game.", response.toString()));
+                            break;
                         case SUB:
                             log.info(msg.getFrom() + " successfully subscribed to the game.");
                             this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "Successful subscription.", response.toString()));
@@ -110,6 +114,8 @@ public class PlayerMessageController {
         if (prevPlayer != null) {
             this.simpleMessagingTemplate.convertAndSend("/private/" + prevPlayer.getName() + "/player/" + gameService.getGameId(msg), new PlayerStateResponse("Server", "Player update!", "PLAYER", prevPlayer));
         }
+        String gameId = gameService.getGameId(msg);
+        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
     @MessageMapping("/action/stock")
@@ -117,12 +123,16 @@ public class PlayerMessageController {
         log.info(msg.getFrom() + " bought a(n) " + msg.getText() + " stock.");
         gameService.modifyStocks(msg);
         this.simpleMessagingTemplate.convertAndSend("/public/stock/" + gameService.getGameId(msg), new StockResponse(msg.getFrom(), gameService.getGameId(msg), "STOCK", gameService.getAllStocks(msg.getFrom()), gameService.getStocks(msg.getFrom()), gameService.getPlayer(msg.getFrom()).getMoney()));
+        String gameId = gameService.getGameId(msg);
+        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
     @MessageMapping("/action/exercise")
     public void handlePlayerWorkingOut(@Payload PlayerExerciseMessage msg) {
-        log.info(String.format("%s doin' some workout. (%s, %d) ", msg.getFrom(), msg.getExercise(), msg.getAmount()));
+        log.info(String.format("%s doin' some workout. (%s, %f) ", msg.getFrom(), msg.getExercise(), msg.getAmount()));
         gameService.saveExerciseReps(msg);
+        String gameId = gameService.getGameId(msg);
+        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
     @MessageMapping("/action/vision")

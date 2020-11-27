@@ -68,7 +68,7 @@ public class AdminMessageController {
         gameService.stop(msg.getText());
         this.simpleMessagingTemplate.convertAndSend("/admin", new SimpleResponse(msg.getFrom(), "Game stopped!", "STOP"));
         this.simpleMessagingTemplate.convertAndSend("/admin/games", new GamesResponse("Server", "Active games.", "GAMES", gameService.getActiveGames()));
-        //this.simpleMessagingTemplate.convertAndSend("/admin/results", new PlayersResponse("Server", "Update!", "PLAYERS", gameService.getPlayersRanked(msg.getText())));
+        this.simpleMessagingTemplate.convertAndSend("/public/stop", new SimpleResponse("Server", "Game stopped.", "STOP"));
     }
 
     @MessageMapping("/admin/update")
@@ -76,7 +76,6 @@ public class AdminMessageController {
         log.info(msg.getFrom() + " : " + msg.getText());
         gameService.showPlayers(msg.getText());
         this.simpleMessagingTemplate.convertAndSend("/admin/games", new GamesResponse("Server", "Active games.", "GAMES", gameService.getActiveGames()));
-        //this.simpleMessagingTemplate.convertAndSend("/admin/results", new PlayersResponse("Server", "Update!", "PLAYERS", gameService.getPlayersRanked(msg.getText())));
     }
 
     @MessageMapping("/admin/delete")
@@ -84,6 +83,5 @@ public class AdminMessageController {
         log.info(msg.getFrom() + " : " + msg.getText());
         gameService.deleteGame(msg.getText());
         this.simpleMessagingTemplate.convertAndSend("/admin/games", new GamesResponse("Server", "Active games.", "GAMES", gameService.getActiveGames()));
-        //this.simpleMessagingTemplate.convertAndSend("/admin/results", new PlayersResponse("Server", "Update!", "PLAYERS", gameService.getPlayersRanked(msg.getText())));
     }
 }

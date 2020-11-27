@@ -56,6 +56,7 @@ class GameServiceImpl implements GameService {
         List<Player> players = game.getResults();
         int i = 1;
         for (var player : players) {
+            userService.setCurrentGameId(player.getName(), "");
             System.out.printf("%d. place: %s -> fields: %d -> total: %d\n", i, player.getName(), player.getFieldsOwned(), player.getTotalScore());
             i++;
         }
@@ -64,10 +65,10 @@ class GameServiceImpl implements GameService {
     @Override
     public ConnectionResponseEnum joinGame(GameMessage msg) {
         String playerName = msg.getFrom();
-        User user = userService.findByName(playerName);
         if (!msg.getText().equals("")) {
             userService.setCurrentGameId(playerName, msg.getText());
         }
+        User user = userService.findByName(playerName);
         if (user.getCurrentGameId().equals("")) {
             return ConnectionResponseEnum.NULL;
         }
