@@ -1,9 +1,14 @@
 package com.msh.WorkoutGameServer.model.user;
 
+import com.msh.WorkoutGameServer.logic.RankCalculator;
+import com.msh.WorkoutGameServer.model.Rank;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -16,6 +21,9 @@ public class User {
     private String currentGameId = "";
     private int crowns;
     private int score;
+    private Rank rank;
+    //Game name / position
+    private Map<String, Integer> results;
 
     public User() {
     }
@@ -32,6 +40,8 @@ public class User {
         this.currentGameId = currentGameId;
         this.crowns = crowns;
         this.score = score;
+        this.rank = RankCalculator.calculateRank(score);
+        this.results = new HashMap<>();
     }
 
     public void addCrowns(int newCrowns) {
@@ -47,6 +57,8 @@ public class User {
                 ", currentGameId='" + currentGameId + '\'' +
                 ", crowns=" + crowns +
                 ", score=" + score +
+                ", rank=" + rank +
+                ", results=" + results +
                 '}';
     }
 }

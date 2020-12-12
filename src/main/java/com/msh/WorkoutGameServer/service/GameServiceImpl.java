@@ -27,9 +27,12 @@ class GameServiceImpl implements GameService {
     private UserServiceImpl userService;
 
     @Override
-    public void createGame(Game game) {
-        //TODO: if title is unique
-        this.gameDataAccess.save(game);
+    public boolean createGame(Game game) {
+        if (gameDataAccess.findByTitle(game.getTitle()) == null) {
+            this.gameDataAccess.save(game);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -159,6 +162,15 @@ class GameServiceImpl implements GameService {
         return gameDataAccess.findAll()
                 .stream()
                 .filter(g -> (g.isRunning() || g.isSubscriptionOn()))
+                .map(AdminGame::new)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AdminGame> getArchiveGames() {
+        return gameDataAccess.findAll()
+                .stream()
+                .filter(g -> (!g.isRunning() && !g.isSubscriptionOn()))
                 .map(AdminGame::new)
                 .collect(Collectors.toList());
     }

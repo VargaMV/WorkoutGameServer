@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -34,6 +36,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<User> findAll() {
+        return userDataAccess.findAll();
+    }
+
     public boolean isUsernameTaken(LoginUser loginUser) {
         return (userDataAccess.findByUsername(loginUser.getUsername()) != null);
     }
@@ -52,5 +58,15 @@ public class UserServiceImpl implements UserService {
         User user = findByName(name);
         user.setCurrentGameId(gameId);
         userDataAccess.save(user);
+    }
+
+    @Override
+    public void deleteByName(String name) {
+        userDataAccess.deleteByUsername(name);
+    }
+
+    @Override
+    public void deleteAll() {
+        userDataAccess.deleteAll();
     }
 }

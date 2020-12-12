@@ -1,5 +1,6 @@
 package com.msh.WorkoutGameServer.controller;
 
+import com.msh.WorkoutGameServer.model.Game;
 import com.msh.WorkoutGameServer.model.Player;
 import com.msh.WorkoutGameServer.model.message.ConnectionResponseEnum;
 import com.msh.WorkoutGameServer.model.message.SimpleMessage;
@@ -124,7 +125,9 @@ public class PlayerMessageController {
         gameService.modifyStocks(msg);
         this.simpleMessagingTemplate.convertAndSend("/public/stock/" + gameService.getGameId(msg), new StockResponse(msg.getFrom(), gameService.getGameId(msg), "STOCK", gameService.getAllStocks(msg.getFrom()), gameService.getStocks(msg.getFrom()), gameService.getPlayer(msg.getFrom()).getMoney()));
         String gameId = gameService.getGameId(msg);
-        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        //TODO: change from gameId
+        //this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        sendToUsersInGame(gameId, "players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
     @MessageMapping("/action/exercise")
@@ -158,5 +161,12 @@ public class PlayerMessageController {
         log.info(msg.getFrom() + " is requesting player info.");
         String gameId = gameService.getGameId(msg);
         this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+    }
+
+    void sendToUsersInGame(String gameId, String dest, SimpleResponse resp) {
+        Game game = gameService.getGame(gameId);
+        for (var player : game.getPlayers()) {
+            this.simpleMessagingTemplate.convertAndSend("/private/" + player.getName() + "/" + dest, resp);
+        }
     }
 }

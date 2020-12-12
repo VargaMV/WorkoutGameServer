@@ -39,18 +39,20 @@ public class AdminMessageController {
     @MessageMapping("/admin/init")
     public void chooseGame(@Payload GameInitMessage msg) {
         log.info(msg.getFrom() + " : " + msg.getText());
+        boolean success = false;
         if ("new".equals(msg.getText())) {
             GameInit init = msg.getGameInit();
             Game game = new Game(init.getTitle(), init.getMapSize(), init.getWaitingTime());
-            gameService.createGame(game);
+            success = gameService.createGame(game);
         }
-
-        PriceCalculator.exponent = gameService.getLastGame().getPriceIncExponent();
-        this.simpleMessagingTemplate.convertAndSend("/admin", new SimpleResponse(msg.getFrom(), "Game initialized!", "INIT"));
-        this.simpleMessagingTemplate.convertAndSend("/admin/games", new GamesResponse("Server", "Active games.", "GAMES", gameService.getActiveGames()));
-        this.simpleMessagingTemplate.convertAndSend("/public/games", new SimpleGamesResponse("Server", "Active games.", "GAMES", gameService.getActiveSimpleGames()));
-        //this.simpleMessagingTemplate.convertAndSend("/admin/results", new PlayersResponse("Server", "Update!", "PLAYERS", gameService.getPlayersRanked(gameService.getLastGame().getId())));
-
+        if (success) {
+            PriceCalculator.exponent = gameService.getLastGame().getPriceIncExponent();
+            this.simpleMessagingTemplate.convertAndSend("/admin", new SimpleResponse(msg.getFrom(), "Game initialized!", "INIT"));
+            this.simpleMessagingTemplate.convertAndSend("/admin/games", new GamesResponse("Server", "Active games.", "GAMES", gameService.getActiveGames()));
+            this.simpleMessagingTemplate.convertAndSend("/public/games", new SimpleGamesResponse("Server", "Active games.", "GAMES", gameService.getActiveSimpleGames()));
+        } else {
+            //TODO: creation failed
+        }
     }
 
     @MessageMapping("/admin/start")

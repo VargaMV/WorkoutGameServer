@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface GameService {
-    void createGame(Game game);
+    boolean createGame(Game game);
 
     void deleteGame(String id);
 
@@ -53,4 +53,6 @@ public interface GameService {
     List<SimpleGame> getActiveSimpleGames();
 
     List<AdminGame> getActiveGames();
+
+    List<AdminGame> getArchiveGames();
 }
