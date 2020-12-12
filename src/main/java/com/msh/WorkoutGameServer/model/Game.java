@@ -156,16 +156,16 @@ public class Game {
         return prevOwner;
     }
 
-    public void stockBought(String playerName, String exercise) {
+    public void stockBought(String playerName, String exercise, double exponent) {
         Player player = getPlayerByName(playerName);
-        if (player.isStockAffordable(exercise)) {
+        if (player.isStockAffordable(exercise, exponent)) {
             int prevValue = totalStockNumbers.get(exercise);
             totalStockNumbers.put(exercise, prevValue + 1);
 
             int playerPrevValue = player.getStockNumbers().get(exercise);
             player.getStockNumbers().put(exercise, playerPrevValue + 1);
 
-            int price = PriceCalculator.calculate(player.getStockNumbers().get(exercise));
+            int price = PriceCalculator.calculate(player.getStockNumbers().get(exercise), exponent);
             player.decMoney(price);
         }
     }

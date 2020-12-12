@@ -1,6 +1,5 @@
 package com.msh.WorkoutGameServer.controller;
 
-import com.msh.WorkoutGameServer.logic.PriceCalculator;
 import com.msh.WorkoutGameServer.model.Game;
 import com.msh.WorkoutGameServer.model.GameInit;
 import com.msh.WorkoutGameServer.model.message.SimpleMessage;
@@ -46,7 +45,6 @@ public class AdminMessageController {
             success = gameService.createGame(game);
         }
         if (success) {
-            PriceCalculator.exponent = gameService.getLastGame().getPriceIncExponent();
             this.simpleMessagingTemplate.convertAndSend("/admin", new SimpleResponse(msg.getFrom(), "Game initialized!", "INIT"));
             this.simpleMessagingTemplate.convertAndSend("/admin/games", new GamesResponse("Server", "Active games.", "GAMES", gameService.getActiveGames()));
             this.simpleMessagingTemplate.convertAndSend("/public/games", new SimpleGamesResponse("Server", "Active games.", "GAMES", gameService.getActiveSimpleGames()));

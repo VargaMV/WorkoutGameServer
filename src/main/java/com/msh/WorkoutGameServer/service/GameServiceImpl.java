@@ -1,7 +1,6 @@
 package com.msh.WorkoutGameServer.service;
 
 import com.msh.WorkoutGameServer.database.GameDataAccess;
-import com.msh.WorkoutGameServer.logic.PriceCalculator;
 import com.msh.WorkoutGameServer.model.*;
 import com.msh.WorkoutGameServer.model.message.ConnectionResponseEnum;
 import com.msh.WorkoutGameServer.model.message.MessageType;
@@ -43,7 +42,6 @@ class GameServiceImpl implements GameService {
     @Override
     public void start(String id) {
         Game game = getGame(id);
-        PriceCalculator.exponent = game.getPriceIncExponent();
         game.setRunning(true);
         game.setSubscriptionOn(false);
         game.randomizePlayerPositions();
@@ -202,7 +200,8 @@ class GameServiceImpl implements GameService {
         User user = userService.findByName(playerName);
         Game game = getGame(user.getCurrentGameId());
         String exercise = msg.getText();
-        game.stockBought(playerName, exercise);
+        double exp = game.getPriceIncExponent();
+        game.stockBought(playerName, exercise, exp);
         this.gameDataAccess.save(game);
     }
 

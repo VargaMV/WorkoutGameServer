@@ -79,8 +79,8 @@ public class Player implements Comparable<Player>, Serializable {
         fieldsOwned--;
     }
 
-    public boolean isStockAffordable(String exercise) {
-        return money >= PriceCalculator.calculateNext(stockNumbers.get(exercise));
+    public boolean isStockAffordable(String exercise, double exp) {
+        return money >= PriceCalculator.calculateNext(stockNumbers.get(exercise), exp);
     }
 
     public boolean isVisionIncAffordable() {

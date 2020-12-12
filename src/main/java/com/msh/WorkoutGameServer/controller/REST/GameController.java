@@ -1,6 +1,5 @@
 package com.msh.WorkoutGameServer.controller.REST;
 
-import com.msh.WorkoutGameServer.logic.PriceCalculator;
 import com.msh.WorkoutGameServer.model.Game;
 import com.msh.WorkoutGameServer.model.GameInit;
 import com.msh.WorkoutGameServer.model.message.ApiResponse;
@@ -28,7 +27,6 @@ public class GameController {
         Game game = new Game(gameInit.getTitle(), gameInit.getMapSize(), gameInit.getWaitingTime());
         boolean success = gameService.createGame(game);
         if (success) {
-            PriceCalculator.exponent = gameService.getLastGame().getPriceIncExponent();
             //TODO: make this and other clear and better
             this.simpleMessagingTemplate.convertAndSend("/admin", new SimpleResponse("Server", "Game initialized!", "INIT"));
             this.simpleMessagingTemplate.convertAndSend("/admin/games", new GamesResponse("Server", "Active games.", "GAMES", gameService.getActiveGames()));

@@ -126,8 +126,8 @@ public class PlayerMessageController {
         this.simpleMessagingTemplate.convertAndSend("/public/stock/" + gameService.getGameId(msg), new StockResponse(msg.getFrom(), gameService.getGameId(msg), "STOCK", gameService.getAllStocks(msg.getFrom()), gameService.getStocks(msg.getFrom()), gameService.getPlayer(msg.getFrom()).getMoney()));
         String gameId = gameService.getGameId(msg);
         //TODO: change from gameId
-        //this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
-        sendToUsersInGame(gameId, "players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        //sendToUsersInGame(gameId, "players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
     @MessageMapping("/action/exercise")
