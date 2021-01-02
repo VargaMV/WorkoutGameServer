@@ -33,7 +33,7 @@ public class Game {
 
     private LocalDateTime creationDate;
     private int waitingTime;
-    private double priceIncExponent;
+    private double priceIncBase;
 
     /*public Game(GameInit init) {
         this(init.getTitle(), init.getMapSize(), init.getWaitingTime());
@@ -45,7 +45,7 @@ public class Game {
         this.creationDate = LocalDateTime.now();
         this.subscriptionOn = true;
         this.waitingTime = waitingTime;
-        this.priceIncExponent = Constants.PRICE_INCREASE_EXPONENT;
+        this.priceIncBase = Constants.PRICE_INCREASE_EXPONENT;
         this.map = new Field[mapSize][mapSize];
         for (int i = 0; i < mapSize; i++) {
             for (int j = 0; j < mapSize; j++) {
@@ -156,18 +156,20 @@ public class Game {
         return prevOwner;
     }
 
-    public void stockBought(String playerName, String exercise, double exponent) {
+    public boolean stockBought(String playerName, String exercise, double base, int amount) {
         Player player = getPlayerByName(playerName);
-        if (player.isStockAffordable(exercise, exponent)) {
+        if (player.isStockAffordable(exercise, base, amount)) {
+            double price = PriceCalculator.calculateNextN(player.getStockNumbers().get(exercise), base, amount);
+            player.decMoney(price);
+
             int prevValue = totalStockNumbers.get(exercise);
-            totalStockNumbers.put(exercise, prevValue + 1);
+            totalStockNumbers.put(exercise, prevValue + amount);
 
             int playerPrevValue = player.getStockNumbers().get(exercise);
-            player.getStockNumbers().put(exercise, playerPrevValue + 1);
-
-            int price = PriceCalculator.calculate(player.getStockNumbers().get(exercise), exponent);
-            player.decMoney(price);
+            player.getStockNumbers().put(exercise, playerPrevValue + amount);
+            return true;
         }
+        return false;
     }
 
     public void exerciseDone(String playerName, String exercise, double amount) {

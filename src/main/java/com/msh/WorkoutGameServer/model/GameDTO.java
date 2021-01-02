@@ -13,18 +13,18 @@ public class GameDTO {
     public Map<String, Integer> totalStockNumbers;
     public Map<String, Exercise> exerciseValues;
     public int waitingTime;
-    public double priceIncExponent;
+    public double priceIncBase;
 
     public GameDTO() {
     }
 
-    public GameDTO(String id, Field[][] map, Player player, Map<String, Integer> totalStockNumbers, Map<String, Exercise> exerciseValues, int waitingTime, double priceIncExponent) {
+    public GameDTO(String id, Field[][] map, Player player, Map<String, Integer> totalStockNumbers, Map<String, Exercise> exerciseValues, int waitingTime, double priceIncBase) {
         this.id = id;
         this.map = map;
         this.player = player;
         this.totalStockNumbers = totalStockNumbers;
         this.exerciseValues = exerciseValues;
         this.waitingTime = waitingTime;
-        this.priceIncExponent = priceIncExponent;
+        this.priceIncBase = priceIncBase;
     }
 }

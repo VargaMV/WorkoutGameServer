@@ -33,7 +33,7 @@ public class PlayerMessageController {
     @MessageMapping("/action/games")
     public void getGames(@Payload SimpleMessage msg) {
         log.info("get games: " + msg.getFrom());
-        this.simpleMessagingTemplate.convertAndSend("/private/games/" + msg.getFrom(), new SimpleGamesResponse("Server", "Active games.", "GAMES", gameService.getActiveSimpleGames()));
+        this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/games", new SimpleGamesResponse("Server", "Active games.", "GAMES", gameService.getActiveSimpleGames()));
     }
 
     @MessageMapping("/action/auth")
@@ -91,6 +91,11 @@ public class PlayerMessageController {
                             this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "You are late to subscribe to this game.", response.toString()));
                             this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection/" + gameId, new SimpleResponse("Server", msg.getFrom() + ", you are late to subscribe to this game.", response.toString()));
                             break;
+                        case OTHER_DEVICE:
+                            log.info(msg.getFrom() + " was already logged in on another device.");
+                            this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection", new SimpleResponse("Server", "You have already joined to the game on an other device.", response.toString()));
+                            this.simpleMessagingTemplate.convertAndSend("/private/" + msg.getFrom() + "/connection/" + gameId, new SimpleResponse("Server", "You have already joined to the game on an other device.", response.toString()));
+                            break;
                     }
                 }
                 break;
@@ -104,30 +109,62 @@ public class PlayerMessageController {
     public void handlePlayerMove(@Payload PlayerMoveMessage msg) {
         log.info(msg.getFrom() + " moved to " + msg.getNewPos());
         gameService.modifyMap(msg);
-        this.simpleMessagingTemplate.convertAndSend("/public/map/" + gameService.getGameId(msg), new MapStateResponse(msg.getFrom(), gameService.getGameId(msg), "MAP", gameService.getMap(msg.getFrom())));
+        //this.simpleMessagingTemplate.convertAndSend("/public/map/" + gameService.getGameId(msg), new MapStateResponse(msg.getFrom(), gameService.getGameId(msg), "MAP", gameService.getMap(msg.getFrom())));
+        sendToUsersInGame(
+                msg,
+                "map",
+                new MapStateResponse(
+                        msg.getFrom(),
+                        gameService.getGameId(msg),
+                        "MAP",
+                        gameService.getMap(msg.getFrom())
+                )
+        );
     }
 
     @MessageMapping("/action/occupy")
     public void handlePlayerOccupation(@Payload PlayerOccupationMessage msg) {
         log.info(msg.getFrom() + " occupied " + msg.getOccupiedField());
         Player prevPlayer = gameService.modifyMap(msg);
-        this.simpleMessagingTemplate.convertAndSend("/public/map/" + gameService.getGameId(msg), new MapStateResponse(msg.getFrom(), gameService.getGameId(msg), "MAP", gameService.getMap(msg.getFrom())));
+        //this.simpleMessagingTemplate.convertAndSend("/public/map/" + gameService.getGameId(msg), new MapStateResponse(msg.getFrom(), gameService.getGameId(msg), "MAP", gameService.getMap(msg.getFrom())));
+        sendToUsersInGame(
+                msg,
+                "map",
+                new MapStateResponse(
+                        msg.getFrom(),
+                        gameService.getGameId(msg),
+                        "MAP",
+                        gameService.getMap(msg.getFrom())
+                )
+        );
         if (prevPlayer != null) {
             this.simpleMessagingTemplate.convertAndSend("/private/" + prevPlayer.getName() + "/player/" + gameService.getGameId(msg), new PlayerStateResponse("Server", "Player update!", "PLAYER", prevPlayer));
         }
         String gameId = gameService.getGameId(msg);
-        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        //this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        sendToUsersInGame(msg, "players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
     @MessageMapping("/action/stock")
-    public void handlePlayerBuying(@Payload GameMessage msg) {
-        log.info(msg.getFrom() + " bought a(n) " + msg.getText() + " stock.");
+    public void handlePlayerBuying(@Payload PlayerBuyMessage msg) {
+        log.info(msg.getFrom() + " bought " + msg.getAmount() + " " + msg.getExercise() + " stock(s).");
         gameService.modifyStocks(msg);
-        this.simpleMessagingTemplate.convertAndSend("/public/stock/" + gameService.getGameId(msg), new StockResponse(msg.getFrom(), gameService.getGameId(msg), "STOCK", gameService.getAllStocks(msg.getFrom()), gameService.getStocks(msg.getFrom()), gameService.getPlayer(msg.getFrom()).getMoney()));
+        //this.simpleMessagingTemplate.convertAndSend("/public/stock/" + gameService.getGameId(msg), new StockResponse(msg.getFrom(), gameService.getGameId(msg), "STOCK", gameService.getAllStocks(msg.getFrom()), gameService.getStocks(msg.getFrom()), gameService.getPlayer(msg.getFrom()).getMoney()));
+        sendToUsersInGame(
+                msg,
+                "stock",
+                new StockResponse(
+                        msg.getFrom(),
+                        gameService.getGameId(msg),
+                        "STOCK",
+                        gameService.getAllStocks(msg.getFrom()),
+                        gameService.getStocks(msg.getFrom()),
+                        gameService.getPlayer(msg.getFrom()).getMoney()
+                )
+        );
         String gameId = gameService.getGameId(msg);
-        //TODO: change from gameId
-        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
-        //sendToUsersInGame(gameId, "players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        //this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        sendToUsersInGame(msg, "players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
     @MessageMapping("/action/exercise")
@@ -135,7 +172,8 @@ public class PlayerMessageController {
         log.info(String.format("%s doin' some workout. (%s, %f) ", msg.getFrom(), msg.getExercise(), msg.getAmount()));
         gameService.saveExerciseReps(msg);
         String gameId = gameService.getGameId(msg);
-        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        //this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        sendToUsersInGame(msg, "players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
     @MessageMapping("/action/vision")
@@ -160,10 +198,12 @@ public class PlayerMessageController {
     public void handleResults(@Payload GameMessage msg) {
         log.info(msg.getFrom() + " is requesting player info.");
         String gameId = gameService.getGameId(msg);
-        this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        //this.simpleMessagingTemplate.convertAndSend("/public/players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
+        sendToUsersInGame(msg, "players", new PlayersResponse("Server", "Most recent player stat!", "PLAYERS", gameService.getPlayersRanked(gameId)));
     }
 
-    void sendToUsersInGame(String gameId, String dest, SimpleResponse resp) {
+    void sendToUsersInGame(GameMessage msg, String dest, SimpleResponse resp) {
+        String gameId = gameService.getGameId(msg);
         Game game = gameService.getGame(gameId);
         for (var player : game.getPlayers()) {
             this.simpleMessagingTemplate.convertAndSend("/private/" + player.getName() + "/" + dest, resp);

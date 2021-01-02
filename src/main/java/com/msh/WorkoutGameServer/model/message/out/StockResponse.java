@@ -10,13 +10,13 @@ import java.util.Map;
 public class StockResponse extends SimpleResponse {
     private Map<String, Integer> all;
     private Map<String, Integer> own;
-    private int ownMoney;
+    private double ownMoney;
 
     public StockResponse() {
 
     }
 
-    public StockResponse(String from, String text, String response, Map<String, Integer> all, Map<String, Integer> own, int money) {
+    public StockResponse(String from, String text, String response, Map<String, Integer> all, Map<String, Integer> own, double money) {
         super(from, text, response);
         this.all = all;
         this.own = own;

@@ -79,6 +79,9 @@ class GameServiceImpl implements GameService {
             player.setLastConnect(LocalDateTime.now());
             if (player.getLastDisconnect() != null) {
                 Duration duration = Duration.between(player.getLastDisconnect(), player.getLastConnect());
+                if (duration.isNegative()) {
+                    return ConnectionResponseEnum.OTHER_DEVICE;
+                }
                 int time = player.getSecondsUntilMove();
                 player.setSecondsUntilMove((int) Math.max(time - duration.getSeconds(), 0));
                 gameDataAccess.save(game);
@@ -199,9 +202,10 @@ class GameServiceImpl implements GameService {
         String playerName = msg.getFrom();
         User user = userService.findByName(playerName);
         Game game = getGame(user.getCurrentGameId());
-        String exercise = msg.getText();
-        double exp = game.getPriceIncExponent();
-        game.stockBought(playerName, exercise, exp);
+        String exercise = ((PlayerBuyMessage) msg).getExercise();
+        int amount = ((PlayerBuyMessage) msg).getAmount();
+        double base = game.getPriceIncBase();
+        game.stockBought(playerName, exercise, base, amount);
         this.gameDataAccess.save(game);
     }
 
@@ -265,7 +269,7 @@ class GameServiceImpl implements GameService {
                 .exerciseValues(game.getExerciseValues())
                 .totalStockNumbers(game.getTotalStockNumbers())
                 .waitingTime(game.getWaitingTime())
-                .priceIncExponent(game.getPriceIncExponent())
+                .priceIncBase(game.getPriceIncBase())
                 .build();
     }
 

@@ -18,7 +18,7 @@ public class Player implements Comparable<Player>, Serializable {
     private String name;
     private Color color;
     private Coordinate position;
-    private int money;
+    private double money;
     private int currentScore;
     private int totalScore;
     private int fieldsOwned;
@@ -54,11 +54,11 @@ public class Player implements Comparable<Player>, Serializable {
         }
     }
 
-    public void incMoney(int earning) {
+    public void incMoney(double earning) {
         money += earning;
     }
 
-    public void decMoney(int cost) {
+    public void decMoney(double cost) {
         money -= cost;
     }
 
@@ -79,8 +79,8 @@ public class Player implements Comparable<Player>, Serializable {
         fieldsOwned--;
     }
 
-    public boolean isStockAffordable(String exercise, double exp) {
-        return money >= PriceCalculator.calculateNext(stockNumbers.get(exercise), exp);
+    public boolean isStockAffordable(String exercise, double base, int amount) {
+        return money >= PriceCalculator.calculateNextN(stockNumbers.get(exercise), base, amount);
     }
 
     public boolean isVisionIncAffordable() {

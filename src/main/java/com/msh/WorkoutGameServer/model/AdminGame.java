@@ -17,13 +17,13 @@ public class AdminGame {
     private boolean subscriptionOn;
     private boolean running;
     private int waitingTime;
-    private double priceIncExponent;
+    private double priceIncBase;
 
     public AdminGame() {
 
     }
 
-    public AdminGame(String id, String title, int mapSize, List<Player> players, boolean subscriptionOn, boolean running, int waitingTime, double priceIncExponent) {
+    public AdminGame(String id, String title, int mapSize, List<Player> players, boolean subscriptionOn, boolean running, int waitingTime, double priceIncBase) {
         this.id = id;
         this.title = title;
         this.mapSize = mapSize;
@@ -31,7 +31,7 @@ public class AdminGame {
         this.subscriptionOn = subscriptionOn;
         this.running = running;
         this.waitingTime = waitingTime;
-        this.priceIncExponent = priceIncExponent;
+        this.priceIncBase = priceIncBase;
     }
 
     public AdminGame(Game game) {
@@ -43,6 +43,6 @@ public class AdminGame {
         this.subscriptionOn = game.isSubscriptionOn();
         this.running = game.isRunning();
         this.waitingTime = game.getWaitingTime();
-        this.priceIncExponent = game.getPriceIncExponent();
+        this.priceIncBase = game.getPriceIncBase();
     }
 }
